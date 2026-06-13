@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pittsburg, KS → Fremont, CA · Road Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --paper:#eef0e9;
+    --paper-card:#f8f9f4;
+    --asphalt:#1b2128;
+    --asphalt-soft:#3a434e;
+    --ink-faint:rgba(27,33,40,.12);
+    --ink-hair:rgba(27,33,40,.16);
+    --sign-green:#15643f;
+    --sign-green-deep:#0d4a2c;
+    /* landscape accents, west-bound */
+    --plains:#c2912f;   /* Kansas wheat */
+    --redrock:#b1542f;  /* Utah red rock */
+    --salt:#5f7488;     /* salt flats / desert steel */
+    --pine:#2f6b4f;     /* Sierra */
+    --bay:#2b6d8c;      /* arrival */
+    --shadow:0 1px 0 rgba(27,33,40,.04), 0 8px 30px -18px rgba(27,33,40,.45);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--paper);color:var(--asphalt);
+    font-family:"Inter",system-ui,sans-serif;font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(rgba(27,33,40,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(27,33,40,.025) 1px,transparent 1px);
+    background-size:34px 34px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- type ---------- */
+  h1,h2,h3,.disp{font-family:"Saira Condensed",sans-serif;font-weight:700;letter-spacing:-.01em;line-height:1.02;margin:0;}
+  .eyebrow{font-family:"Saira Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:.78rem;color:var(--sign-green);}
+  .mono{font-family:"Space Mono",monospace;}
+  p{margin:0 0 1rem;}
+  a{color:var(--sign-green-deep);}
+
+  /* ---------- shields ---------- */
+  .shield{width:42px;height:46px;display:inline-block;vertical-align:middle;flex:none;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:64px 0 30px;}
+  .hero .eyebrow{margin-bottom:18px;}
+  .route-title{font-size:clamp(2.6rem,7vw,5.2rem);font-weight:800;text-transform:uppercase;line-height:.92;}
+  .route-title .arrow{color:var(--redrock);}
+  .route-sub{font-size:clamp(1rem,2.2vw,1.18rem);color:var(--asphalt-soft);max-width:60ch;margin-top:18px;}
+  .hero-shields{display:flex;align-items:center;gap:14px;margin:26px 0 4px;}
+  .hero-shields span{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:.85rem;color:var(--asphalt-soft);}
+
+  /* elevation profile */
+  .elev{margin:34px 0 8px;background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:14px;padding:20px 18px 14px;box-shadow:var(--shadow);}
+  .elev figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .elev figcaption .t{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:1.05rem;}
+  .elev figcaption .s{font-size:.8rem;color:var(--asphalt-soft);}
+  .elev svg{width:100%;height:auto;display:block;}
+  .elev .axislbl{font-family:"Space Mono",monospace;font-size:11px;fill:var(--asphalt-soft);}
+  .elev .peaklbl{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:13px;fill:var(--asphalt);}
+  .elev .daylbl{font-family:"Saira Condensed",sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;fill:var(--sign-green-deep);}
+  .elev .townlbl{font-family:"Space Mono",monospace;font-size:10px;fill:var(--asphalt-soft);}
+
+  /* signage stat bar */
+  .signbar{margin:22px 0 6px;background:var(--sign-green);border-radius:12px;padding:7px;box-shadow:var(--shadow);}
+  .signbar-inner{border:2px solid rgba(255,255,255,.55);border-radius:8px;display:grid;grid-template-columns:repeat(4,1fr);}
+  .stat{padding:16px 18px;color:#fff;border-right:1px solid rgba(255,255,255,.22);}
+  .stat:last-child{border-right:none;}
+  .stat .k{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;opacity:.85;}
+  .stat .v{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:1.7rem;line-height:1.1;margin-top:2px;}
+  .stat .v small{font-size:.95rem;font-weight:500;opacity:.85;}
+
+  /* ---------- big idea ---------- */
+  .bigidea{margin:30px 0;padding:22px 26px;background:var(--asphalt);color:#eef0e9;border-radius:14px;box-shadow:var(--shadow);}
+  .bigidea b{color:#fff;}
+  .bigidea .eyebrow{color:#7fd1a3;}
+
+  /* ---------- section frame ---------- */
+  section{padding:34px 0;border-top:1px solid var(--ink-hair);}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .sec-head h2{font-size:clamp(1.5rem,3.4vw,2.1rem);text-transform:uppercase;letter-spacing:.01em;}
+  .sec-head .n{font-family:"Space Mono",monospace;font-size:.85rem;color:var(--sign-green);border:1px solid var(--ink-hair);border-radius:6px;padding:3px 8px;}
+  .sec-lead{color:var(--asphalt-soft);max-width:70ch;margin-bottom:22px;}
+
+  /* ---------- glance cards ---------- */
+  .glance{display:grid;gap:12px;}
+  .leg{display:grid;grid-template-columns:54px 1fr auto;gap:16px;align-items:center;
+       background:var(--paper-card);border:1px solid var(--ink-hair);border-left-width:5px;border-radius:11px;padding:14px 18px;box-shadow:var(--shadow);}
+  .leg .dno{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1.9rem;line-height:1;}
+  .leg .dno small{display:block;font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--asphalt-soft);}
+  .leg .desc{min-width:0;}
+  .leg .desc .date{font-family:"Space Mono",monospace;font-size:.74rem;color:var(--asphalt-soft);}
+  .leg .desc .rt{font-weight:600;}
+  .leg .meta{text-align:right;font-size:.82rem;color:var(--asphalt-soft);white-space:nowrap;}
+  .leg .meta .mi{font-family:"Space Mono",monospace;color:var(--asphalt);font-weight:700;}
+  .leg.d1{border-left-color:var(--plains);} .leg.d1 .dno{color:var(--plains);}
+  .leg.d2{border-left-color:var(--redrock);} .leg.d2 .dno{color:var(--redrock);}
+  .leg.d3{border-left-color:var(--salt);} .leg.d3 .dno{color:var(--salt);}
+  .leg.d4{border-left-color:var(--pine);} .leg.d4 .dno{color:var(--pine);}
+  .leg.d5{border-left-color:var(--bay);} .leg.d5 .dno{color:var(--bay);}
+
+  /* ---------- callout / note ---------- */
+  .note{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:12px;padding:18px 22px;box-shadow:var(--shadow);}
+  .note.tz{border-left:5px solid var(--bay);}
+  .note h4{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:1rem;margin:0 0 8px;}
+  .note ul{margin:6px 0 0;padding-left:18px;}
+  .note li{margin:4px 0;}
+
+  /* landscape key */
+  .key{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:18px;font-size:.82rem;color:var(--asphalt-soft);}
+  .key span{display:inline-flex;align-items:center;gap:7px;}
+  .key i{width:13px;height:13px;border-radius:3px;display:inline-block;}
+
+  /* ---------- day blocks (the road) ---------- */
+  .road{position:relative;margin-top:10px;padding-left:46px;}
+  .road::before{content:"";position:absolute;left:14px;top:8px;bottom:8px;width:3px;
+    background:repeating-linear-gradient(var(--asphalt) 0 14px,transparent 14px 26px);opacity:.5;}
+  .day{position:relative;margin-bottom:30px;}
+  .day .pin{position:absolute;left:-46px;top:0;width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1.05rem;
+    box-shadow:0 0 0 5px var(--paper);}
+  .daycard{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+  .dayband{padding:18px 24px;color:#fff;}
+  .dayband .date{font-family:"Space Mono",monospace;font-size:.76rem;opacity:.9;}
+  .dayband h3{font-size:clamp(1.4rem,3vw,1.9rem);text-transform:uppercase;margin-top:2px;}
+  .dayband .stat2{font-family:"Space Mono",monospace;font-size:.82rem;margin-top:8px;opacity:.95;}
+  .dayband .tag{display:inline-block;font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.1em;font-size:.68rem;
+    background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:3px 11px;margin-top:10px;}
+  .daybody{padding:20px 24px 24px;}
+
+  .d1 .pin,.d1 .dayband{background:var(--plains);}
+  .d2 .pin,.d2 .dayband{background:var(--redrock);}
+  .d3 .pin,.d3 .dayband{background:var(--salt);}
+  .d4 .pin,.d4 .dayband{background:var(--pine);}
+  .d5 .pin,.d5 .dayband{background:var(--bay);}
+
+  /* schedule */
+  .sched{display:grid;gap:2px;margin:4px 0 18px;}
+  .sched .row{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:8px 0;border-bottom:1px solid var(--ink-faint);}
+  .sched .row:last-child{border-bottom:none;}
+  .sched .tm{font-family:"Space Mono",monospace;font-size:.8rem;color:var(--sign-green-deep);font-weight:700;}
+  .sched .seg{font-weight:600;}
+  .sched .seg small{display:block;font-weight:400;color:var(--asphalt-soft);font-size:.85rem;}
+
+  .bits{display:grid;gap:12px;}
+  .bit{padding-left:14px;border-left:3px solid var(--ink-hair);}
+  .bit b{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:.85rem;display:block;color:var(--asphalt);}
+  .bit.scenery{border-left-color:var(--redrock);}
+  .bit.fuel{border-left-color:var(--plains);}
+  .bit.night{border-left-color:var(--asphalt);}
+
+  /* lodging card */
+  .lodge{margin-top:14px;background:#fff;border:1px solid var(--ink-hair);border-radius:11px;padding:16px 18px;}
+  .lodge .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .lodge .name{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:1.15rem;line-height:1.1;}
+  .lodge .addr{font-size:.82rem;color:var(--asphalt-soft);}
+  .badge{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem;font-weight:700;
+    color:#fff;background:var(--sign-green);border-radius:20px;padding:4px 11px;white-space:nowrap;}
+  .lodge .meta2{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:.84rem;}
+  .lodge .meta2 .price{font-family:"Space Mono",monospace;font-weight:700;color:var(--asphalt);}
+  .lodge .meta2 .conf{font-family:"Space Mono",monospace;color:var(--asphalt-soft);}
+  .lodge .meta2 .rate{color:var(--sign-green-deep);font-weight:600;}
+  .lodge .fine{font-size:.82rem;color:var(--asphalt-soft);margin-top:10px;}
+
+  /* ---------- gas gauge callout ---------- */
+  .fuelbox{background:var(--asphalt);color:#eef0e9;border-radius:16px;padding:26px 28px;box-shadow:var(--shadow);}
+  .fuelbox .eyebrow{color:var(--plains);}
+  .fuelbox h2{color:#fff;font-size:clamp(1.5rem,3.4vw,2.1rem);text-transform:uppercase;margin:6px 0 14px;}
+  .fuelbox p{color:#cdd3d9;}
+  .fuelgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0;}
+  .fuelgrid .g{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:13px 14px;text-align:center;}
+  .fuelgrid .g .st{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.1em;font-size:.7rem;color:#9fb0a6;}
+  .fuelgrid .g .pr{font-family:"Space Mono",monospace;font-weight:700;font-size:1.35rem;color:#fff;margin-top:3px;}
+  .fuelgrid .g.hi{border-color:var(--redrock);background:rgba(177,84,47,.18);}
+  .fuelgrid .g.lo{border-color:var(--pine);background:rgba(47,107,79,.18);}
+  .fuelbox ul{margin:6px 0 0;padding-left:20px;color:#cdd3d9;}
+  .fuelbox li{margin:6px 0;}
+  .fuelbox b{color:#fff;}
+
+  /* ---------- budget ---------- */
+  .budget{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+  .brow{display:grid;grid-template-columns:1fr auto;gap:16px;padding:13px 22px;border-bottom:1px solid var(--ink-faint);align-items:baseline;}
+  .brow .lbl{font-weight:500;}
+  .brow .lbl small{display:block;color:var(--asphalt-soft);font-size:.78rem;font-weight:400;}
+  .brow .amt{font-family:"Space Mono",monospace;font-weight:700;}
+  .brow.sub{background:rgba(21,100,63,.06);}
+  .brow.sub .lbl{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+  .brow.total{background:var(--sign-green);color:#fff;border-bottom:none;}
+  .brow.total .lbl{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-size:1.15rem;}
+  .brow.total .amt{font-size:1.5rem;}
+  .bvars{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  .bvar{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:10px;padding:14px 16px;}
+  .bvar .h{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:.8rem;}
+  .bvar .a{font-family:"Space Mono",monospace;font-weight:700;font-size:1.2rem;margin:2px 0 4px;}
+  .bvar.trim{border-left:4px solid var(--pine);} .bvar.comfort{border-left:4px solid var(--plains);}
+
+  /* ---------- checklist ---------- */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .panel{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);}
+  .panel h4{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:1rem;margin:0 0 10px;}
+  .panel ul{list-style:none;margin:0;padding:0;}
+  .panel li{padding:6px 0 6px 26px;position:relative;border-bottom:1px solid var(--ink-faint);font-size:.92rem;}
+  .panel li:last-child{border-bottom:none;}
+  .panel li::before{content:"";position:absolute;left:0;top:10px;width:13px;height:13px;border:2px solid var(--sign-green);border-radius:3px;}
+  .panel li.done::before{background:var(--sign-green);box-shadow:inset 0 0 0 2px var(--paper-card);}
+  .panel li.warn::before{border-color:var(--redrock);background:var(--redrock);}
+  .panel li b{font-weight:700;}
+
+  .checklist{background:var(--asphalt);color:#eef0e9;border-radius:14px;padding:22px 26px;box-shadow:var(--shadow);}
+  .checklist .eyebrow{color:#7fd1a3;}
+  .checklist ul{list-style:none;margin:12px 0 0;padding:0;}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid rgba(255,255,255,.1);}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist li::before{content:"";position:absolute;left:0;top:11px;width:14px;height:14px;border:2px solid #7fd1a3;border-radius:4px;}
+  .checklist li b{color:#fff;}
+
+  footer{padding:40px 0 64px;color:var(--asphalt-soft);font-size:.85rem;}
+  footer .rule{height:1px;background:var(--ink-hair);margin-bottom:20px;}
+  footer .shields{display:flex;gap:10px;margin-bottom:14px;}
+
+  @media (max-width:720px){
+    .signbar-inner{grid-template-columns:1fr 1fr;}
+    .stat:nth-child(2){border-right:none;}
+    .fuelgrid{grid-template-columns:1fr 1fr;}
+    .cols{grid-template-columns:1fr;}
+    .bvars{grid-template-columns:1fr;}
+    .leg{grid-template-columns:44px 1fr;}
+    .leg .meta{grid-column:1/-1;text-align:left;}
+    .sched .row{grid-template-columns:80px 1fr;gap:10px;}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .elev .trace{stroke-dasharray:2600;stroke-dashoffset:2600;animation:draw 2.4s ease-out .25s forwards;}
+    .day{opacity:0;transform:translateY(14px);animation:rise .6s ease-out forwards;}
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @media print{
+    body{background:#fff;}
+    .fuelbox,.bigidea,.checklist{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .map-legend{display:none;}
+  }
+
+  /* ---------- map ---------- */
+  .mapwrap{position:relative;}
+  #map{height:540px;width:100%;border-radius:16px;border:1px solid var(--ink-hair);box-shadow:var(--shadow);background:#e7e9e2;z-index:0;}
+  .leaflet-container{font-family:"Inter",sans-serif;background:#e7e9e2;}
+  .leaflet-div-icon{background:transparent;border:none;}
+  .mk{display:flex;align-items:center;justify-content:center;}
+  .mk-stop{width:30px;height:30px;border-radius:50%;color:#fff;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1rem;line-height:1;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.4);}
+  .mk-start{width:18px;height:18px;border-radius:50%;background:var(--asphalt);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .mk-wp{width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);}
+  .pop b{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:1rem;display:block;color:var(--asphalt);}
+  .pop span{display:block;color:var(--asphalt-soft);font-size:.85rem;margin-top:3px;}
+  .leaflet-popup-content-wrapper{border-radius:11px;box-shadow:var(--shadow);}
+  .leaflet-popup-content{margin:11px 15px;line-height:1.4;}
+  .map-legend{position:absolute;top:14px;right:14px;z-index:500;background:rgba(248,249,244,.95);
+    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);border:1px solid var(--ink-hair);border-radius:12px;
+    padding:13px 15px;box-shadow:var(--shadow);font-size:.82rem;}
+  .map-legend .ml-title{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;color:var(--asphalt-soft);margin-bottom:9px;}
+  .map-legend .ml-row{display:flex;align-items:center;gap:10px;padding:3px 0;white-space:nowrap;}
+  .map-legend .ml-row i{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:.78rem;flex:none;font-style:normal;
+    border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .map-cap{display:flex;flex-wrap:wrap;gap:9px 24px;margin-top:18px;font-family:"Space Mono",monospace;font-size:.78rem;color:var(--asphalt-soft);}
+  .map-cap span{display:inline-flex;align-items:center;gap:9px;}
+  .map-cap span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sign-green);flex:none;}
+
+  @media (max-width:720px){
+    #map{height:400px;}
+    .map-legend{top:10px;right:10px;padding:9px 11px;font-size:.72rem;}
+    .map-legend .ml-row i{width:18px;height:18px;font-size:.68rem;}
+  }
+
+  /* ---------- photos ---------- */
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:4px 0 18px;}
+  figure.shot{margin:0;border-radius:12px;overflow:hidden;border:1px solid var(--ink-hair);box-shadow:var(--shadow);background:#e7e9e2;position:relative;}
+  figure.shot img{width:100%;height:210px;object-fit:cover;display:block;}
+  figure.shot.wide{grid-column:1 / -1;}
+  figure.shot.wide img{height:300px;}
+  figure.shot.solo{margin:4px 0 18px;}
+  figure.shot figcaption{padding:10px 14px;font-size:.8rem;color:var(--asphalt-soft);display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--paper-card);}
+  figure.shot figcaption .coord{font-family:"Space Mono",monospace;color:var(--sign-green-deep);white-space:nowrap;font-size:.72rem;}
+  figure.shot.err img{display:none;}
+  figure.shot.err{background:repeating-linear-gradient(45deg,#e7e9e2,#e7e9e2 10px,#e1e4dc 10px,#e1e4dc 20px);}
+  figure.shot.err figcaption{background:transparent;}
+  figure.shot.err figcaption::before{content:"Photo loads online";position:absolute;top:10px;left:14px;font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.1em;font-size:.66rem;color:var(--asphalt-soft);}
+  @media (max-width:720px){
+    .gallery{grid-template-columns:1fr;}
+    figure.shot img,figure.shot.wide img{height:220px;}
+  }
+
+  /* ---------- exact stops list ---------- */
+  .spots{margin:2px 0 6px;}
+  .spots-h{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--asphalt-soft);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .spots-h::after{content:"";flex:1;height:1px;background:var(--ink-hair);}
+  .sp{display:grid;grid-template-columns:14px 1fr auto;gap:11px;padding:8px 0;border-bottom:1px solid var(--ink-faint);align-items:baseline;}
+  .sp:last-child{border-bottom:none;}
+  .sp .dot{width:10px;height:10px;border-radius:50%;align-self:start;margin-top:6px;border:2px solid #fff;box-shadow:0 0 0 1px var(--ink-hair);}
+  .sp .nm{font-weight:600;min-width:0;}
+  .sp .nm small{display:block;font-weight:400;color:var(--asphalt-soft);font-size:.85rem;line-height:1.45;margin-top:1px;}
+  .sp .nm .opt{display:inline-block;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:.6rem;color:var(--plains);border:1px solid var(--plains);border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:middle;}
+  .sp .mp{font-family:"Space Mono",monospace;font-size:.7rem;color:var(--sign-green-deep);white-space:nowrap;}
+  @media (max-width:720px){
+    .sp{grid-template-columns:12px 1fr;}
+    .sp .mp{grid-column:2;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===================== HERO ===================== -->
+  <header class="hero">
+    <div class="eyebrow">5-Day Relocation Drive · June 2026</div>
+    <h1 class="route-title">Pittsburg, KS <span class="arrow">→</span><br>Fremont, CA</h1>
+    <p class="route-sub">Take the beautiful I-70 mountain and red-rock route west, sleep cheap every night, and turn the long Nevada stretch into a small-town casino crawl instead of a transit slog. Two drivers, one Kia Soul, and a coast into California on the cheapest gas you can find.</p>
+
+    <div class="hero-shields">
+      <svg class="shield" viewBox="0 0 48 52" aria-hidden="true"><path d="M24 1 L44 6 C44 6 45 30 24 51 C3 30 4 6 4 6 Z" fill="#15366b" stroke="#fff" stroke-width="2"/><path d="M24 1 L44 6 C44 8 44 11 43.4 14 L4.6 14 C4 11 4 8 4 6 Z" fill="#b0202e"/><text x="24" y="37" text-anchor="middle" font-family="'Saira Condensed',sans-serif" font-weight="800" font-size="19" fill="#fff">70</text></svg>
+      <svg class="shield" viewBox="0 0 48 52" aria-hidden="true"><path d="M24 1 L44 6 C44 6 45 30 24 51 C3 30 4 6 4 6 Z" fill="#15366b" stroke="#fff" stroke-width="2"/><path d="M24 1 L44 6 C44 8 44 11 43.4 14 L4.6 14 C4 11 4 8 4 6 Z" fill="#b0202e"/><text x="24" y="37" text-anchor="middle" font-family="'Saira Condensed',sans-serif" font-weight="800" font-size="19" fill="#fff">80</text></svg>
+      <span>Interstate 70 west to the Rockies, then Interstate 80 across the Great Basin</span>
+    </div>
+
+    <!-- elevation profile -->
+    <figure class="elev">
+      <figcaption>
+        <span class="t">The shape of the drive</span>
+        <span class="s">Elevation, Pittsburg → Fremont · two passes bracket the high-desert middle</span>
+      </figcaption>
+      <svg id="elevsvg" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Elevation profile of the route, climbing to 11,158 ft at Eisenhower Tunnel and 7,056 ft at Donner Pass before dropping to sea level at the Bay."></svg>
+    </figure>
+
+    <!-- signage stats -->
+    <div class="signbar">
+      <div class="signbar-inner">
+        <div class="stat"><div class="k">Total Distance</div><div class="v">2,065 <small>mi</small></div></div>
+        <div class="stat"><div class="k">On the Road</div><div class="v">5 <small>days · 4 nights</small></div></div>
+        <div class="stat"><div class="k">Park Fees</div><div class="v">$0</div></div>
+        <div class="stat"><div class="k">All-In Budget</div><div class="v">~$765</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="bigidea">
+    <div class="eyebrow">The big idea</div>
+    <p style="margin:8px 0 0">Beauty is the whole point of this route — so the plan spends the budget where it matters and saves everywhere else. <b>Gas is the biggest and most fixable cost:</b> buy it cheap in Kansas, Colorado, and Utah, then coast into California on near-empty. Every hotel is already booked at a free or fixed rate.</p>
+  </div>
+
+  <!-- ===================== ROUTE AT A GLANCE ===================== -->
+  <section id="glance">
+    <div class="sec-head"><h2>Route at a glance</h2></div>
+    <p class="sec-lead">Five legs, each tinted to the land it crosses — wheat plains, red rock, salt and sage, Sierra pine, bay water. That color carries through the day-by-day below.</p>
+    <div class="glance">
+      <div class="leg d1">
+        <div class="dno">1<small>Sun 6/14</small></div>
+        <div class="desc"><div class="date">SUN JUN 14</div><div class="rt">Pittsburg → Denver area, CO</div><div style="font-size:.84rem;color:var(--asphalt-soft)">The long transit day across the plains</div></div>
+        <div class="meta"><span class="mi">~660 mi</span> · ~9.5 hr<br>City Inn · $66 ✓</div>
+      </div>
+      <div class="leg d2">
+        <div class="dno">2<small>Mon 6/15</small></div>
+        <div class="desc"><div class="date">MON JUN 15</div><div class="rt">Glenwood Canyon + San Rafael Swell → Salina, UT</div><div style="font-size:.84rem;color:var(--asphalt-soft)">★ the scenic day — and it's free</div></div>
+        <div class="meta"><span class="mi">~410 mi</span> · ~6.5 hr<br>Super 8 · $91 ✓</div>
+      </div>
+      <div class="leg d3">
+        <div class="dno">3<small>Tue 6/16</small></div>
+        <div class="desc"><div class="date">TUE JUN 16</div><div class="rt">Salt Flats → Elko → Battle Mtn → Winnemucca</div><div style="font-size:.84rem;color:var(--asphalt-soft)">★ the fun day — a Nevada casino crawl</div></div>
+        <div class="meta"><span class="mi">~550 mi</span> · ~8.5 hr<br>Signature Inn · $88 ✓</div>
+      </div>
+      <div class="leg d4">
+        <div class="dno">4<small>Wed 6/17</small></div>
+        <div class="desc"><div class="date">WED JUN 17</div><div class="rt">Reno → Donner Pass → Manteca, CA</div><div style="font-size:.84rem;color:var(--asphalt-soft)">Over the Sierra, one quick Reno stop</div></div>
+        <div class="meta"><span class="mi">~415 mi</span> · ~6.5 hr<br>Best Western · $89 ✓</div>
+      </div>
+      <div class="leg d5">
+        <div class="dno">5<small>Thu 6/18</small></div>
+        <div class="desc"><div class="date">THU JUN 18</div><div class="rt">Manteca → Fremont — check in after 3 PM</div><div style="font-size:.84rem;color:var(--asphalt-soft)">The short final hop home</div></div>
+        <div class="meta"><span class="mi">~60 mi</span> · ~1 hr<br>(arrival)</div>
+      </div>
+    </div>
+
+    <div class="note tz" style="margin-top:20px">
+      <h4>Time zones — you gain 2 hours going west</h4>
+      <ul>
+        <li><b>Central → Mountain</b> crossing into Colorado (Day 1): clock falls back 1 hr.</li>
+        <li><b>Mountain → Pacific</b> at Wendover, NV (Day 3): clock falls back another 1 hr.</li>
+        <li>Every clock time in this plan is <b>local</b> to wherever you are at that moment.</li>
+      </ul>
+    </div>
+
+    <div class="key">
+      <span><i style="background:var(--plains)"></i> Kansas plains</span>
+      <span><i style="background:var(--redrock)"></i> Utah red rock</span>
+      <span><i style="background:var(--salt)"></i> Salt flats &amp; high desert</span>
+      <span><i style="background:var(--pine)"></i> Sierra Nevada</span>
+      <span><i style="background:var(--bay)"></i> The Bay</span>
+    </div>
+  </section>
+
+  <!-- ===================== MAP ===================== -->
+  <section id="map-sec">
+    <div class="sec-head"><h2>The route, mapped</h2></div>
+    <p class="sec-lead">Each leg is drawn in its landscape color, and every exact spot below is dropped as a pin — the numbered circles are your overnight stops, the small dots are the named scenic and fuel waypoints (Eisenhower Tunnel, the San Rafael Reef, the Tree of Utah, Donner Pass and more). Tap any marker for details; you'll find photos of the marquee spots down in the day-by-day.</p>
+    <div class="mapwrap">
+      <div id="map" role="img" aria-label="Map of the route from Pittsburg, Kansas to Fremont, California following Interstate 70 and Interstate 80, with five overnight stops and key scenic waypoints."></div>
+      <div class="map-legend">
+        <div class="ml-title">Overnight stops</div>
+        <div class="ml-row"><i style="background:var(--plains)">1</i> Westminster, CO</div>
+        <div class="ml-row"><i style="background:var(--redrock)">2</i> Salina, UT</div>
+        <div class="ml-row"><i style="background:var(--salt)">3</i> Winnemucca, NV</div>
+        <div class="ml-row"><i style="background:var(--pine)">4</i> Manteca, CA</div>
+        <div class="ml-row"><i style="background:var(--bay)">★</i> Fremont, CA</div>
+      </div>
+    </div>
+    <div class="map-cap">
+      <span>5 states — KS · CO · UT · NV · CA</span>
+      <span>2 passes — Eisenhower 11,158 ft · Donner 7,056 ft</span>
+      <span>~2,065 miles end to end</span>
+    </div>
+  </section>
+
+  <!-- ===================== GAS STRATEGY ===================== -->
+  <section id="gas">
+    <div class="fuelbox">
+      <div class="eyebrow">Where the money actually is</div>
+      <h2>Gas strategy</h2>
+      <p>Fuel is roughly 40% of the trip, and prices are elevated right now from the Middle East conflict. A Kia Soul does ~29 mpg highway → about <b>71 gallons</b> over the route. Buy where it's cheap; cross the expensive borders on a near-empty tank.</p>
+      <div class="fuelgrid">
+        <div class="g lo"><div class="st">Kansas</div><div class="pr">~$3.50</div></div>
+        <div class="g"><div class="st">Nevada</div><div class="pr">~$5.00</div></div>
+        <div class="g hi"><div class="st">California</div><div class="pr">~$5.90</div></div>
+        <div class="g"><div class="st">National avg</div><div class="pr">~$4.20</div></div>
+      </div>
+      <ul>
+        <li><b>Fill cheap</b> in Kansas, Colorado, and Utah. Leave Pittsburg with a full tank.</li>
+        <li><b>Day 2 — critical:</b> top off in <b>Green River, UT</b>. The San Rafael Swell stretch to Salina is <b>~108 miles with zero services.</b></li>
+        <li><b>Day 4 — critical:</b> fill up in <b>Nevada</b> (Winnemucca or Fernley) <em>before</em> California, then coast into the Bay and buy as little CA gas as possible.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== DAY BY DAY ===================== -->
+  <section id="days">
+    <div class="sec-head"><h2>Day by day</h2></div>
+    <p class="sec-lead">Hour-by-hour timing, the scenery to watch for, where you sleep, and what the night looks like — all clock times local.</p>
+
+    <div class="road">
+
+      <!-- DAY 1 -->
+      <article class="day d1">
+        <div class="pin">1</div>
+        <div class="daycard">
+          <div class="dayband">
+            <div class="date">SUNDAY · JUNE 14</div>
+            <h3>Pittsburg, KS → Denver area</h3>
+            <div class="stat2">~660 mi · ~9.5 hr · the long transit day</div>
+            <span class="tag">Plains · longest leg</span>
+          </div>
+          <div class="daybody">
+            <p>Flat, fast, and easy — but it's the longest leg, so split the wheel and leave early. You gain an hour into Colorado, so you reach Denver with the afternoon still ahead.</p>
+            <div class="spots">
+              <div class="spots-h">Exact stops on this leg</div>
+              <div class="sp"><span class="dot" style="background:var(--plains)"></span><span class="nm">Wichita, KS — first fuel<small>Join I-135 N; quick breakfast and top-off about two hours in.</small></span><span class="mp">37.69°N, 97.34°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--plains)"></span><span class="nm">Monument Rocks (Chalk Pyramids)<small>60-ft chalk spires on the open plains — a National Natural Landmark. <span class="opt">optional detour</span> ~20 min south of I-70 near Oakley.</small></span><span class="mp">38.79°N, 100.76°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--plains)"></span><span class="nm">Colby, KS — lunch<small>The natural midday break; last cheap Kansas fuel before the Colorado line.</small></span><span class="mp">39.40°N, 101.05°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--plains)"></span><span class="nm">Limon, CO — clocks back 1 hr<small>You cross into Mountain time; the plains start tilting up toward the Front Range.</small></span><span class="mp">39.26°N, 103.69°W</span></div>
+            </div>
+            <div class="sched">
+              <div class="row"><div class="tm">5:00a CT</div><div class="seg">Depart Pittsburg <small>Full tank, cooler packed</small></div></div>
+              <div class="row"><div class="tm">~7:00a</div><div class="seg">Wichita <small>US-400 W · ~120 mi</small></div></div>
+              <div class="row"><div class="tm">~8:30a</div><div class="seg">Salina, KS <small>I-135 N · fuel + breakfast</small></div></div>
+              <div class="row"><div class="tm">~10:00a</div><div class="seg">Hays, KS <small>onto I-70 W</small></div></div>
+              <div class="row"><div class="tm">~11:45a</div><div class="seg">Colby, KS <small>lunch stop</small></div></div>
+              <div class="row"><div class="tm">~1:30p MT</div><div class="seg">Limon, CO <small>lost 1 hr crossing into CO · fuel</small></div></div>
+              <div class="row"><div class="tm">~3:00p MT</div><div class="seg">Arrive Denver / Aurora <small>check in, rest</small></div></div>
+            </div>
+            <div class="bits">
+              <div class="bit fuel"><b>Fuel</b>Salina KS → Hays/Colby → Limon CO. All cheap; tank up before Denver.</div>
+              <div class="bit night"><b>Nightlife (only if you're not wiped)</b>The most options of the whole trip — rooftop bars (54thirty, Cruise Room), clubs, or casinos ~40 min west in Black Hawk. Realistically, after 9.5 hours a beer and bed is the smart call.</div>
+            </div>
+            <div class="lodge">
+              <div class="top">
+                <div><div class="name">City Inn</div><div class="addr">7151 Federal Blvd, Westminster · 8.0/10, very clean</div></div>
+                <span class="badge">Booked · Paid</span>
+              </div>
+              <div class="meta2">
+                <span class="price">$66.15</span>
+                <span class="rate">Paid on Visa · non-refundable</span>
+                <span class="conf">Expedia #73473551280064</span>
+              </div>
+              <div class="fine">Check-in 3 PM / out 11 AM · $100 deposit hold at desk · front desk closes 10 PM (you arrive mid-afternoon).</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- DAY 2 -->
+      <article class="day d2">
+        <div class="pin">2</div>
+        <div class="daycard">
+          <div class="dayband">
+            <div class="date">MONDAY · JUNE 15</div>
+            <h3>Denver → Salina, UT</h3>
+            <div class="stat2">~410 mi · ~6.5 hr · the most beautiful driving of the trip</div>
+            <span class="tag">★ Scenic day · red rock</span>
+          </div>
+          <div class="daybody">
+            <p>Short, gorgeous day. Sleep in a little, climb the Rockies, and drop into Utah's red rock. Take your time and stop at the overlooks — this is the day you won't compromise on.</p>
+            <div class="gallery">
+              <figure class="shot wide">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Quite_possibly_the_most_awesome_road_in_America_4892213989.jpg?width=1100" alt="Interstate 70 cutting straight through the tilted red sandstone fins of the San Rafael Reef in Utah" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+                <figcaption><span>San Rafael Reef — I-70 slices clean through the tilted red rock west of Green River</span><span class="coord">38.93°N, 110.55°W</span></figcaption>
+              </figure>
+              <figure class="shot">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Eisenhower_Tunnel2.JPG?width=900" alt="Portal of the Eisenhower–Johnson Memorial Tunnel on Interstate 70 in Colorado" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+                <figcaption><span>Eisenhower–Johnson Tunnel · Continental Divide, 11,158 ft</span><span class="coord">39.68°N, 105.92°W</span></figcaption>
+              </figure>
+              <figure class="shot">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Glenwood_Canyon_I-70.JPG?width=900" alt="Interstate 70 on a viaduct through Glenwood Canyon beside the Colorado River" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+                <figcaption><span>Glenwood Canyon · I-70 viaduct above the Colorado River</span><span class="coord">39.59°N, 107.19°W</span></figcaption>
+              </figure>
+            </div>
+            <div class="spots">
+              <div class="spots-h">Exact stops on this leg</div>
+              <div class="sp"><span class="dot" style="background:var(--redrock)"></span><span class="nm">Eisenhower–Johnson Tunnel<small>The highest point on the entire U.S. Interstate system, bored straight through the Continental Divide. Ears pop; trucks gear down.</small></span><span class="mp">39.68°N, 105.92°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--redrock)"></span><span class="nm">Vail Pass summit<small>10,662 ft. Gear down for the long descent into Vail rather than riding the brakes.</small></span><span class="mp">39.53°N, 106.22°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--redrock)"></span><span class="nm">Glenwood Canyon · Hanging Lake Rest Area (Exit 125)<small>The cantilevered viaduct hugs the Colorado River at the canyon floor — one of the most beautiful stretches of interstate in the country.</small></span><span class="mp">39.59°N, 107.19°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--plains)"></span><span class="nm">Green River, UT — fuel<small>Last services for 108 miles. Fill the tank here, no exceptions.</small></span><span class="mp">39.00°N, 110.16°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--redrock)"></span><span class="nm">San Rafael Reef · Black Dragon turnoff (I-70 MM147)<small>The highway knifes through vertical red sandstone fins — the most dramatic red-rock driving of the trip.</small></span><span class="mp">38.98°N, 110.42°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--redrock)"></span><span class="nm">Ghost Rock / Spotted Wolf viewpoint<small>Mid-Swell rest area with a viewpoint over the mesas — stop and take it in.</small></span><span class="mp">38.93°N, 110.99°W</span></div>
+            </div>
+            <div class="sched">
+              <div class="row"><div class="tm">7:30a MT</div><div class="seg">Depart Denver</div></div>
+              <div class="row"><div class="tm">~8:45a</div><div class="seg">Eisenhower Tunnel <small>11,158 ft · Continental Divide · ears pop</small></div></div>
+              <div class="row"><div class="tm">~9:15a</div><div class="seg">Vail Pass → Vail</div></div>
+              <div class="row"><div class="tm">~10:30a</div><div class="seg">Glenwood Canyon <small>highway hugs the Colorado River at the canyon floor</small></div></div>
+              <div class="row"><div class="tm">~12:15p</div><div class="seg">Grand Junction, CO <small>lunch</small></div></div>
+              <div class="row"><div class="tm">~2:00p</div><div class="seg">Green River, UT <small>FUEL — last services for 108 mi</small></div></div>
+              <div class="row"><div class="tm">~2:15–3:45p</div><div class="seg">San Rafael Swell <small>red-rock mesas, canyon cuts — pull off at the viewpoints</small></div></div>
+              <div class="row"><div class="tm">~4:00p</div><div class="seg">Arrive Salina, UT</div></div>
+            </div>
+            <div class="bits">
+              <div class="bit scenery"><b>Scenery to watch for</b>Glenwood Canyon — one of America's most beautiful interstates — then the San Rafael Swell: Black Dragon Canyon, Ghost Rocks, and the dramatic Spotted Wolf cut. There's a viewpoint rest area mid-Swell; stop and take it in.</div>
+              <div class="bit"><b>Mountain driving</b>Coming down from the tunnel and Vail Pass, shift to a lower gear to save your brakes rather than riding them.</div>
+              <div class="bit fuel"><b>Fuel</b>Top off in Green River, UT — non-negotiable before the no-services Swell stretch.</div>
+              <div class="bit night"><b>Nightlife</b>None — Utah has no casinos and minimal bars in these small towns. Early night; tomorrow is long.</div>
+            </div>
+            <div class="lodge">
+              <div class="top">
+                <div><div class="name">Super 8 by Wyndham Salina / Scenic Hills</div><div class="addr">375 E 1620 S, Salina, UT · 8.3/10 · free breakfast</div></div>
+                <span class="badge">Booked · Paid</span>
+              </div>
+              <div class="meta2">
+                <span class="price">$90.97</span>
+                <span class="rate">Paid on Visa</span>
+                <span class="conf">Priceline #1015096934</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- DAY 3 -->
+      <article class="day d3">
+        <div class="pin">3</div>
+        <div class="daycard">
+          <div class="dayband">
+            <div class="date">TUESDAY · JUNE 16</div>
+            <h3>Salina → Winnemucca, NV</h3>
+            <div class="stat2">~550 mi · ~8.5 hr + stops · salt flats &amp; a casino crawl</div>
+            <span class="tag">★ Fun day · Great Basin</span>
+          </div>
+          <div class="daybody">
+            <p>The big one. Cross the surreal Bonneville Salt Flats, gain an hour into Nevada, then string together small I-80 casino towns to Winnemucca. Leave by 6 AM, keep stops short — one real meal — and you'll still roll in with the evening free.</p>
+            <figure class="shot wide solo">
+              <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Salt_Flats_Hexagons_and_Leading_Lines.jpg?width=1100" alt="Hexagonal salt-crust patterns stretching flat to distant mountains on the Bonneville Salt Flats" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+              <figcaption><span>Bonneville Salt Flats — a hexagon-cracked salt plain running dead flat to the mountains, just off I-80 near Wendover</span><span class="coord">40.77°N, 113.83°W</span></figcaption>
+            </figure>
+            <div class="spots">
+              <div class="spots-h">Exact stops on this leg</div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Bonneville Salt Flats Rest Area (I-80 Exit 4)<small>A viewing platform right on the salt — the blinding-white plain is one of the flattest places on Earth. Sunglasses on.</small></span><span class="mp">40.77°N, 113.83°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Metaphor: The Tree of Utah (I-80 MM26)<small>An 87-ft concrete-and-stone sculpture rising out of the empty salt — "emergency stopping only," so slow down and look as you pass.</small></span><span class="mp">40.73°N, 113.55°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Wendover — Nevada state line<small>Cross into Nevada and Pacific time; clocks fall back another hour. First casinos if you want a quick pull.</small></span><span class="mp">40.74°N, 114.04°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Elko — lunch + crawl stop #1<small>Real downtown, Basque heritage, the Ruby Mountains on the skyline. Lunch at The Star (family-style Basque).</small></span><span class="mp">40.83°N, 115.76°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Battle Mountain — crawl stop #2<small>Old-Nevada character. The Owl Club for huge steaks; cheap drinks at the Colt.</small></span><span class="mp">40.64°N, 116.93°W</span></div>
+            </div>
+            <div class="sched">
+              <div class="row"><div class="tm">6:00a MT</div><div class="seg">Depart Salina <small>I-15 N</small></div></div>
+              <div class="row"><div class="tm">~8:00a</div><div class="seg">Salt Lake City <small>Wasatch backdrop · fuel</small></div></div>
+              <div class="row"><div class="tm">~9:30a</div><div class="seg">Bonneville Salt Flats <small>blinding-white salt plain — pull off near Wendover</small></div></div>
+              <div class="row"><div class="tm">~10:00a PT</div><div class="seg">Wendover (NV border) <small>lost 1 hr · first casinos if you want a quick pull</small></div></div>
+              <div class="row"><div class="tm">~11:30a</div><div class="seg">Elko <small>lunch + crawl stop #1</small></div></div>
+              <div class="row"><div class="tm">~12:45p</div><div class="seg">Carlin <small>quick gas / leg stretch</small></div></div>
+              <div class="row"><div class="tm">~1:45p</div><div class="seg">Battle Mountain <small>crawl stop #2 · snack/drink</small></div></div>
+              <div class="row"><div class="tm">~3:00p</div><div class="seg">Arrive Winnemucca <small>check in, then night casino</small></div></div>
+            </div>
+            <div class="bits">
+              <div class="bit scenery"><b>The I-80 crawl, east → west (all open 24 hr)</b><b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Elko</b> — the big stop: real downtown, Basque heritage, Ruby Mountains on the skyline. Lunch at The Star (classic family-style Basque) or the Gold Dust West Grille. <b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Carlin</b> — tiny; quick gas, then move on. <b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Battle Mountain</b> — old-Nevada character: the Owl Club (huge steaks), The Nevada Bar (sometimes live music), or the Colt (cheap, friendly).</div>
+              <div class="bit fuel"><b>Fuel</b>SLC → Wendover or Elko → Winnemucca. NV gas ~$5; fine — you fill again tomorrow before CA.</div>
+              <div class="bit night"><b>Night casino</b>After check-in, play Sundance (friendliest, dive-bar vibe), Pete's Gambling Hall (notably not smoky), or Winners Inn. Drinks are comped while you play. Set a hard cash cap before you walk in — and pace it, you drive in the morning.</div>
+            </div>
+            <div class="lodge">
+              <div class="top">
+                <div><div class="name">Signature Inn Winnemucca</div><div class="addr">635 W Winnemucca Blvd · 7.4/10 · clean &amp; remodeled · 6-min walk to Model T Casino</div></div>
+                <span class="badge">Booked</span>
+              </div>
+              <div class="meta2">
+                <span class="price">$88.44</span>
+                <span class="rate">Pay at property · free cancel to Jun 15, 3 PM</span>
+                <span class="conf">Expedia #73473561830226</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- DAY 4 -->
+      <article class="day d4">
+        <div class="pin">4</div>
+        <div class="daycard">
+          <div class="dayband">
+            <div class="date">WEDNESDAY · JUNE 17</div>
+            <h3>Winnemucca → Manteca, CA</h3>
+            <div class="stat2">~415 mi · ~6.5 hr · over the Sierra</div>
+            <span class="tag">Sierra Nevada · Donner Pass</span>
+          </div>
+          <div class="daybody">
+            <p>Easy day with the trip's last great scenery — the Sierra Nevada and Donner Pass. One quick Reno stop, then down into California.</p>
+            <figure class="shot wide solo">
+              <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Donner_Lake_as_seen_from_Donner_Pass.jpg?width=1100" alt="Donner Lake seen from Donner Pass, ringed by Sierra Nevada granite and pine" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+              <figcaption><span>Donner Lake from Donner Pass — granite, pine, and the lake below the 7,056 ft Sierra crest, right before the drop into California</span><span class="coord">39.32°N, 120.32°W</span></figcaption>
+            </figure>
+            <div class="spots">
+              <div class="spots-h">Exact stops on this leg</div>
+              <div class="sp"><span class="dot" style="background:var(--pine)"></span><span class="nm">Reno — Grand Sierra Resort<small>Right off I-80 on the east edge of town: pull in, play or eat, get back on the highway without detouring downtown.</small></span><span class="mp">39.55°N, 119.79°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--pine)"></span><span class="nm">Truckee<small>Historic Sierra rail town — a good coffee/stretch stop before the pass.</small></span><span class="mp">39.33°N, 120.18°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--pine)"></span><span class="nm">Donner Pass · Donner Lake<small>7,056 ft Sierra crest with Donner Lake glittering below. Pines, granite, and the easiest grade you'll get in June.</small></span><span class="mp">39.32°N, 120.32°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--pine)"></span><span class="nm">Sacramento<small>You drop from alpine pine to Central Valley flat in under an hour — fuel only if you skipped it in Nevada.</small></span><span class="mp">38.58°N, 121.49°W</span></div>
+            </div>
+            <div class="sched">
+              <div class="row"><div class="tm">8:00a PT</div><div class="seg">Depart Winnemucca <small>fill the tank — last cheap gas before CA</small></div></div>
+              <div class="row"><div class="tm">~11:00a</div><div class="seg">Reno <small>quick stop at Grand Sierra · lunch</small></div></div>
+              <div class="row"><div class="tm">~12:30p</div><div class="seg">Truckee → Donner Pass <small>7,056 ft · pines, granite, Donner Lake</small></div></div>
+              <div class="row"><div class="tm">~2:30p</div><div class="seg">Sacramento</div></div>
+              <div class="row"><div class="tm">~4:30p</div><div class="seg">Arrive Manteca</div></div>
+            </div>
+            <div class="bits">
+              <div class="bit"><b>One quick Reno stop</b>Hit Grand Sierra Resort — right off I-80 on the east edge of town, so you pull in, play or eat, and get back on the highway without detouring downtown. Keep it short.</div>
+              <div class="bit scenery"><b>Scenery</b>The climb into the Sierra, Donner Lake below the pass, big pine forest — an easy grade in June.</div>
+              <div class="bit fuel"><b>Fuel — critical</b>Fill up in Nevada (Winnemucca or Fernley). Coast into California; buy as little CA gas as possible.</div>
+              <div class="bit night"><b>Nightlife (low-key)</b>It's the night before check-in — keep it chill. Stockton (~20 min) has bars and clubs if you want one last night out.</div>
+            </div>
+            <div class="lodge">
+              <div class="top">
+                <div><div class="name">Best Western Plus Executive Inn &amp; Suites</div><div class="addr">1415 E Yosemite Ave, Manteca · 7.4/10 · free breakfast &amp; parking · pool/hot tub</div></div>
+                <span class="badge">Booked</span>
+              </div>
+              <div class="meta2">
+                <span class="price">$88.63</span>
+                <span class="rate">$0 now · pay at property · refundable to Jun 16</span>
+                <span class="conf">Expedia #73473568442877</span>
+              </div>
+              <div class="fine">Night auditor patrols the lot — a real safety plus. If your room smells of smoke or looks off, ask the front desk to move you (quality varies room to room).</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- DAY 5 -->
+      <article class="day d5">
+        <div class="pin">5</div>
+        <div class="daycard">
+          <div class="dayband">
+            <div class="date">THURSDAY · JUNE 18</div>
+            <h3>Manteca → Fremont</h3>
+            <div class="stat2">~60 mi · ~1 hr · the final hop</div>
+            <span class="tag">Arrival day · the Bay</span>
+          </div>
+          <div class="daybody">
+            <p>Relaxed morning. Manteca → <b>CA-120 W → I-205 W → I-580 W</b> over Altamont Pass → I-680/I-880 → Fremont/Milpitas. Time it to arrive after <b>3:00 PM</b> check-in — grab an early lunch or unpack the car in the meantime.</p>
+            <div class="spots">
+              <div class="spots-h">Exact stops on this leg</div>
+              <div class="sp"><span class="dot" style="background:var(--bay)"></span><span class="nm">Altamont Pass<small>Ridgelines of wind turbines on I-580 — the gateway from the Central Valley into the Bay Area.</small></span><span class="mp">37.73°N, 121.65°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--bay)"></span><span class="nm">Mission Peak, Fremont<small>The 2,517-ft summit that towers over your new home base — your first real Bay Area landmark, and a great first hike once you're settled.</small></span><span class="mp">37.51°N, 121.88°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--bay)"></span><span class="nm">Holiday Inn Express Fremont–Milpitas Central<small>Journey's end. Check in after 3 PM; add the second guest at the desk.</small></span><span class="mp">37.55°N, 121.99°W</span></div>
+            </div>
+            <div class="lodge">
+              <div class="top">
+                <div><div class="name">Holiday Inn Express Fremont–Milpitas Central</div><div class="addr">Your new base · 10-night stay</div></div>
+                <span class="badge">Destination</span>
+              </div>
+              <div class="fine"><b>At the desk:</b> a refundable $100 hold goes on a card — keep that headroom free. <b>Heads-up:</b> the reservation was booked single-occupancy; if both of you are staying, add the second guest at check-in to avoid any issue.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===================== BUDGET ===================== -->
+  <section id="budget">
+    <div class="sec-head"><h2>Budget</h2></div>
+    <p class="sec-lead">Every bed is locked. Gas is the variable you control; food rides in the cooler. Park fees are zero by design — the route's best scenery is all free interstate.</p>
+    <div class="budget">
+      <div class="brow"><div class="lbl">City Inn, Westminster <small>booked · non-refundable</small></div><div class="amt">$66</div></div>
+      <div class="brow"><div class="lbl">Super 8, Salina UT <small>booked · Priceline #1015096934</small></div><div class="amt">$91</div></div>
+      <div class="brow"><div class="lbl">Signature Inn, Winnemucca <small>booked · Expedia #73473561830226</small></div><div class="amt">$88</div></div>
+      <div class="brow"><div class="lbl">Best Western Plus, Manteca <small>booked · refundable to 6/16</small></div><div class="amt">$89</div></div>
+      <div class="brow sub"><div class="lbl">Lodging subtotal · 4 nights ✓</div><div class="amt">$334</div></div>
+      <div class="brow"><div class="lbl">Gas <small>~71 gal blended · buy cheap interior, coast into CA</small></div><div class="amt">$290</div></div>
+      <div class="brow"><div class="lbl">Food <small>cooler + groceries · a Basque/casino meal is extra</small></div><div class="amt">$110</div></div>
+      <div class="brow"><div class="lbl">Park fees <small>route uses no paid parks</small></div><div class="amt">$0</div></div>
+      <div class="brow"><div class="lbl">Buffer <small>tolls, parking, incidentals</small></div><div class="amt">$31</div></div>
+      <div class="brow total"><div class="lbl">Total</div><div class="amt">~$765</div></div>
+    </div>
+    <div class="bvars">
+      <div class="bvar trim"><div class="h">Trim it</div><div class="a">~$690</div>Rock-bottom motels and groceries only.</div>
+      <div class="bvar comfort"><div class="h">Comfort</div><div class="a">~$800</div>Mid-tier hotels and a few sit-down meals.</div>
+    </div>
+    <p style="margin-top:14px;color:var(--asphalt-soft);font-size:.9rem"><b>Not included — nightlife.</b> Gambling, drinks, and covers are on top. Set your own cap; Nevada casinos make it easy to overspend.</p>
+  </section>
+
+  <!-- ===================== PRE-TRIP ===================== -->
+  <section id="prep">
+    <div class="sec-head"><h2>Before you leave</h2></div>
+    <p class="sec-lead">The car's in good shape — the one real gap is no spare tire, so the plan below makes the tires and a plug kit your safety net.</p>
+    <div class="cols">
+      <div class="panel">
+        <h4>Car — status</h4>
+        <ul>
+          <li class="done">Engine oil — just changed, good ~6,000 mi</li>
+          <li class="done">Coolant — full (Zerex Asian Green, MS 591-08)</li>
+          <li class="done">Brakes — good (still gear down on long descents)</li>
+          <li class="done">Wiper fluid — full · chargers packed</li>
+          <li class="warn"><b>No spare tire</b> — no room in the Soul; see plan →</li>
+          <li>Inspect all 4 tires: tread (penny test), even wear, sidewall cracks/bulges, pressure to door-jamb spec</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>No-spare plan</h4>
+        <ul>
+          <li class="warn"><b>Tire plug kit + 12V compressor</b> (~$25–35, Walmart/AutoZone) — fixes the common nail puncture roadside in ~15 min</li>
+          <li>Confirm <b>roadside assistance</b>: auto insurance, Discover card benefits, any leftover Kia roadside</li>
+          <li>A sidewall blowout can't be plugged — that's the tow case, and a UT/NV desert tow is long and pricey</li>
+          <li>A can of Fix-a-Flat is cheap backup insurance</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Documents — glovebox folder</h4>
+        <ul>
+          <li class="done">Temp registration tag — valid through July 9, covers the trip</li>
+          <li>Bill of sale, proof of insurance, Kansas license</li>
+          <li>Printed/offline copies of all 4 hotel confirmations</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Pack</h4>
+        <ul>
+          <li>Cooler + groceries + a case of water (covers the empty desert stretches)</li>
+          <li>Sunglasses (salt-flat glare), light jacket (passes are cool even in June)</li>
+          <li>Offline Google Maps for <b>Utah and Nevada</b> — long dead-zones</li>
+          <li>First-aid kit, paper towels, trash bags, power bank</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SAFETY ===================== -->
+  <section id="safety">
+    <div class="sec-head"><h2>Safety &amp; driving notes</h2></div>
+    <div class="note">
+      <ul style="padding-left:18px;margin:0">
+        <li><b>Day 1 is the long one</b> — swap drivers every ~2 hours, stop when drowsy. No heroics.</li>
+        <li><b>Mountain passes</b> (Eisenhower, Vail, Donner) are clear and easy in June, but use a lower gear on long descents to save the brakes.</li>
+        <li><b>Desert dead-zones</b> — keep the tank above ¼, carry water, download offline maps for UT/NV. Signal disappears for long stretches.</li>
+        <li><b>After casino nights</b> — never take the morning wheel if you've been drinking. Comped drinks add up fast.</li>
+        <li><b>Salt-flat glare</b> — sunglasses on Day 3; the white plain is blinding.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CHECKLIST ===================== -->
+  <section id="reminders">
+    <div class="checklist">
+      <div class="eyebrow">Before the engine starts</div>
+      <ul>
+        <li><b>Buy the tire plug kit + 12V compressor</b> and confirm roadside assistance</li>
+        <li>Inspect all 4 tires — tread, sidewalls, pressure</li>
+        <li>Top off gas in Green River, UT (Day 2) and Nevada (Day 4)</li>
+        <li>Pack cooler, water, sunglasses, light jacket, offline maps</li>
+        <li>Glovebox: temp tag, insurance, bill of sale, license, hotel confirmations</li>
+        <li>Add the 2nd guest to the Fremont reservation if both are staying</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div class="rule"></div>
+    <div class="shields">
+      <svg class="shield" style="width:32px;height:35px" viewBox="0 0 48 52" aria-hidden="true"><path d="M24 1 L44 6 C44 6 45 30 24 51 C3 30 4 6 4 6 Z" fill="#15366b" stroke="#fff" stroke-width="2"/><path d="M24 1 L44 6 C44 8 44 11 43.4 14 L4.6 14 C4 11 4 8 4 6 Z" fill="#b0202e"/><text x="24" y="37" text-anchor="middle" font-family="'Saira Condensed',sans-serif" font-weight="800" font-size="19" fill="#fff">70</text></svg>
+      <svg class="shield" style="width:32px;height:35px" viewBox="0 0 48 52" aria-hidden="true"><path d="M24 1 L44 6 C44 6 45 30 24 51 C3 30 4 6 4 6 Z" fill="#15366b" stroke="#fff" stroke-width="2"/><path d="M24 1 L44 6 C44 8 44 11 43.4 14 L4.6 14 C4 11 4 8 4 6 Z" fill="#b0202e"/><text x="24" y="37" text-anchor="middle" font-family="'Saira Condensed',sans-serif" font-weight="800" font-size="19" fill="#fff">80</text></svg>
+    </div>
+    <p>Pittsburg, KS → Fremont, CA · 2,065 miles · 2021 Kia Soul · two drivers. All drive times and prices are June 2026 estimates — verify gas and any pay-at-property rate as you go. Safe travels.</p>
+  </footer>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ---- route map ---- */
+(function(){
+  if(typeof L==="undefined" || !document.getElementById("map")) return;
+  var C={plains:"#c2912f",redrock:"#b1542f",salt:"#5f7488",pine:"#2f6b4f",bay:"#2b6d8c",asphalt:"#1b2128"};
+
+  var map=L.map('map',{scrollWheelZoom:false,zoomControl:true}).setView([40,-110],5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',{
+    subdomains:'abcd',maxZoom:18,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(map);
+
+  // route, traced along I-70 then I-80, split into the five day-legs
+  var seg1=[[37.4109,-94.7047],[37.6872,-97.3301],[38.8403,-97.6114],[38.8792,-99.3268],[39.3958,-101.0524],[39.2639,-103.6922],[39.7392,-104.9903],[39.8366,-105.0372]];
+  var seg2=[[39.8366,-105.0372],[39.7425,-105.5136],[39.6797,-105.9178],[39.6403,-106.3742],[39.5505,-107.3248],[39.0639,-108.5506],[38.9955,-110.1596],[38.90,-111.00],[38.9577,-111.8594]];
+  var seg3=[[38.9577,-111.8594],[39.60,-111.85],[40.7608,-111.8910],[40.7388,-114.0408],[40.8324,-115.7631],[40.7141,-116.1011],[40.6427,-116.9343],[40.9730,-117.7357]];
+  var seg4=[[40.9730,-117.7357],[40.1796,-118.4730],[39.6080,-119.2518],[39.5296,-119.8138],[39.3280,-120.1833],[39.3138,-120.3208],[38.5816,-121.4944],[37.7974,-121.2161]];
+  var seg5=[[37.7974,-121.2161],[37.7349,-121.6500],[37.6819,-121.7680],[37.5485,-121.9886]];
+  var all=seg1.concat(seg2,seg3,seg4,seg5);
+
+  L.polyline(all,{color:'#ffffff',weight:8,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(map);
+  [[seg1,C.plains],[seg2,C.redrock],[seg3,C.salt],[seg4,C.pine],[seg5,C.bay]].forEach(function(s){
+    L.polyline(s[0],{color:s[1],weight:4.5,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(map);
+  });
+
+  function stopIcon(l,c){return L.divIcon({className:'',html:'<div class="mk mk-stop" style="background:'+c+'">'+l+'</div>',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-17]});}
+  function startIcon(){return L.divIcon({className:'',html:'<div class="mk mk-start"></div>',iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-11]});}
+  function wpIcon(c){return L.divIcon({className:'',html:'<div class="mk mk-wp" style="background:'+c+'"></div>',iconSize:[13,13],iconAnchor:[6,6],popupAnchor:[0,-8]});}
+  function pop(t,s){return '<div class="pop"><b>'+t+'</b>'+(s?'<span>'+s+'</span>':'')+'</div>';}
+
+  L.marker([37.4109,-94.7047],{icon:startIcon()}).addTo(map).bindPopup(pop('Start · Pittsburg, KS','Depart ~5:00 AM, Day 1'));
+  L.marker([39.8366,-105.0372],{icon:stopIcon('1',C.plains)}).addTo(map).bindPopup(pop('Night 1 · City Inn, Westminster','$66 · booked · Denver area'));
+  L.marker([38.9577,-111.8594],{icon:stopIcon('2',C.redrock)}).addTo(map).bindPopup(pop('Night 2 · Super 8, Salina UT','$91 · booked · the scenic day'));
+  L.marker([40.9730,-117.7357],{icon:stopIcon('3',C.salt)}).addTo(map).bindPopup(pop('Night 3 · Signature Inn, Winnemucca','$88 · booked · casino night'));
+  L.marker([37.7974,-121.2161],{icon:stopIcon('4',C.pine)}).addTo(map).bindPopup(pop('Night 4 · Best Western Plus, Manteca','$89 · booked · refundable'));
+  L.marker([37.5485,-121.9886],{icon:stopIcon('★',C.bay)}).addTo(map).bindPopup(pop('Destination · Fremont, CA','Holiday Inn Express · check-in 3 PM'));
+
+  [
+    [[39.6785,-105.9200],C.redrock,'Eisenhower–Johnson Tunnel','11,158 ft · highest point on the Interstate system'],
+    [[39.5289,-106.2203],C.redrock,'Vail Pass','10,662 ft summit · gear down'],
+    [[39.5870,-107.1930],C.redrock,'Glenwood Canyon','I-70 viaduct above the Colorado River'],
+    [[38.9955,-110.1596],C.plains,'Green River, UT','Last fuel for 108 miles'],
+    [[38.9800,-110.4200],C.redrock,'San Rafael Reef','I-70 slices the red-rock fins'],
+    [[40.7332,-113.5509],C.salt,'Tree of Utah','87-ft sculpture · I-80 MM26'],
+    [[40.7700,-113.8300],C.salt,'Bonneville Salt Flats','Viewing platform over the salt'],
+    [[40.7388,-114.0408],C.salt,'Wendover','Nevada line · clocks back 1 hr'],
+    [[40.8324,-115.7631],C.salt,'Elko','Basque lunch · Ruby Mountains'],
+    [[40.6388,-116.9343],C.salt,'Battle Mountain','Owl Club steaks'],
+    [[39.3158,-120.3214],C.pine,'Donner Pass','7,056 ft · Donner Lake below'],
+    [[39.3280,-120.1833],C.pine,'Truckee','Historic Sierra rail town'],
+    [[37.7349,-121.6500],C.bay,'Altamont Pass','Wind-turbine ridges into the Bay'],
+    [[37.5124,-121.8805],C.bay,'Mission Peak','Fremont\u2019s iconic 2,517-ft summit']
+  ].forEach(function(w){ L.marker(w[0],{icon:wpIcon(w[1])}).addTo(map).bindPopup(pop(w[2],w[3])); });
+
+  map.fitBounds(L.latLngBounds(all),{padding:[42,42]});
+})();
+</script>
+<script>
+(function(){
+  // ---- elevation profile data: [cumulative miles, elevation ft, label, kind] ----
+  var pts = [
+    [0,951,"Pittsburg","town"],
+    [120,1300,"",""],
+    [215,1220,"",""],
+    [310,2000,"",""],
+    [415,3160,"Colby",""],
+    [540,5360,"",""],
+    [660,5280,"Denver","day1"],
+    [720,11158,"Eisenhower Tunnel · 11,158 ft","peak"],
+    [762,8120,"",""],
+    [820,5760,"Glenwood",""],
+    [910,4590,"",""],
+    [1010,4078,"Green River","town"],
+    [1050,6200,"",""],
+    [1070,5180,"Salina UT","day2"],
+    [1230,4226,"Salt Lake City",""],
+    [1340,4220,"Salt Flats","town"],
+    [1480,5066,"Elko",""],
+    [1570,4512,"",""],
+    [1640,4311,"Winnemucca","day3"],
+    [1820,4500,"Reno",""],
+    [1865,7056,"Donner Pass · 7,056 ft","peak"],
+    [1980,30,"Sacramento",""],
+    [2035,30,"Manteca","day4"],
+    [2065,56,"Fremont","end"]
+  ];
+  var W=1000,H=360, L=60,R=956, TOP=44, BASE=300, maxFt=11200;
+  function X(mi){return L+(mi/2065)*(R-L);}
+  function Y(ft){return BASE-(ft/maxFt)*(BASE-TOP);}
+  var svg=document.getElementById("elevsvg");
+  if(!svg) return;
+  var NS="http://www.w3.org/2000/svg";
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  // gradient + grid defs
+  var defs=el("defs",{});
+  defs.innerHTML='<linearGradient id="elevfill" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#15643f" stop-opacity="0.30"/>'+
+    '<stop offset="100%" stop-color="#15643f" stop-opacity="0.02"/></linearGradient>';
+  svg.appendChild(defs);
+
+  // baseline + a couple of gridlines with ft labels
+  [0,5000,10000].forEach(function(ft){
+    var y=Y(ft);
+    svg.appendChild(el("line",{x1:L,y1:y,x2:R,y2:y,stroke:"rgba(27,33,40,.10)","stroke-width":1}));
+    var t=el("text",{x:L-8,y:y+3,"text-anchor":"end","class":"axislbl"});
+    t.textContent=ft===0?"0":(ft/1000)+"k ft";
+    svg.appendChild(t);
+  });
+
+  // build path strings
+  var line="",area="M"+X(0)+" "+BASE+" ";
+  pts.forEach(function(p,i){
+    var x=X(p[0]),y=Y(p[1]);
+    line+=(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1)+" ";
+    area+="L"+x.toFixed(1)+" "+y.toFixed(1)+" ";
+  });
+  area+="L"+X(2065)+" "+BASE+" Z";
+  svg.appendChild(el("path",{d:area,fill:"url(#elevfill)"}));
+  svg.appendChild(el("path",{d:line,fill:"none",stroke:"#1b2128","stroke-width":2.5,"stroke-linejoin":"round","stroke-linecap":"round","class":"trace"}));
+
+  // day-boundary verticals + labels
+  var dayCols={day1:"#c2912f",day2:"#b1542f",day3:"#5f7488",day4:"#2f6b4f",end:"#2b6d8c"};
+  var dayNames={day1:"Denver · D1",day2:"Salina · D2",day3:"Winnemucca · D3",day4:"Manteca · D4",end:"Fremont"};
+  pts.forEach(function(p){
+    if(dayCols[p[3]]){
+      var x=X(p[0]);
+      svg.appendChild(el("line",{x1:x,y1:TOP-6,x2:x,y2:BASE,stroke:dayCols[p[3]],"stroke-width":1.4,"stroke-dasharray":"3 4",opacity:.8}));
+      svg.appendChild(el("circle",{cx:x,cy:Y(p[1]),r:4,fill:dayCols[p[3]],stroke:"#f8f9f4","stroke-width":2}));
+      var dl=el("text",{x:x,y:BASE+18,"text-anchor":"middle","class":"daylbl",fill:dayCols[p[3]]});
+      dl.textContent=dayNames[p[3]];
+      svg.appendChild(dl);
+    }
+  });
+
+  // peaks
+  pts.forEach(function(p){
+    if(p[3]==="peak"){
+      var x=X(p[0]),y=Y(p[1]);
+      svg.appendChild(el("circle",{cx:x,cy:y,r:4.5,fill:"#1b2128"}));
+      var pl=el("text",{x:x,y:y-10,"text-anchor":"middle","class":"peaklbl"});
+      pl.textContent=p[2];
+      svg.appendChild(pl);
+    }
+  });
+
+  // a few town labels along the baseline-ish
+  pts.forEach(function(p){
+    if(p[3]==="town" || p[2]==="Colby" || p[2]==="Glenwood" || p[2]==="Salt Lake City" || p[2]==="Elko" || p[2]==="Reno" || p[2]==="Sacramento"){
+      if(!p[2]) return;
+      var x=X(p[0]),y=Y(p[1]);
+      svg.appendChild(el("circle",{cx:x,cy:y,r:2.5,fill:"#5f7488"}));
+      var tl=el("text",{x:x,y:y+16,"text-anchor":"middle","class":"townlbl"});
+      tl.textContent=p[2];
+      svg.appendChild(tl);
+    }
+  });
+})();
+
+// scroll-reveal for day blocks
+(function(){
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if(!("IntersectionObserver" in window)) return;
+  var days=document.querySelectorAll(".day");
+  days.forEach(function(d){d.style.animationPlayState="paused";});
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.style.animationPlayState="running"; io.unobserve(e.target);} });
+  },{threshold:.12});
+  days.forEach(function(d){io.observe(d);});
+})();
+</script>
+</body>
+</html>
