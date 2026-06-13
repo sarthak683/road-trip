@@ -1,5 +1,4 @@
-.vercel/
-.DS_Store
-.vercel
 .claude/
 .preview-server.js
+.git
+README.md

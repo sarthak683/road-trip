@@ -312,6 +312,65 @@
     .sp{grid-template-columns:12px 1fr;}
     .sp .mp{grid-column:2;}
   }
+
+  /* ---------- countdown chip ---------- */
+  .countdown{display:inline-flex;align-items:center;gap:10px;margin:0 0 18px;background:var(--asphalt);color:#eef0e9;
+    border-radius:30px;padding:8px 18px 8px 13px;font-family:"Space Mono",monospace;font-size:.82rem;box-shadow:var(--shadow);}
+  .countdown b{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1.1rem;color:#7fd1a3;letter-spacing:.02em;}
+  .countdown .dotpulse{width:9px;height:9px;border-radius:50%;background:#7fd1a3;flex:none;animation:pulse 2.2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,209,163,.5);}70%{box-shadow:0 0 0 9px rgba(127,209,163,0);}100%{box-shadow:0 0 0 0 rgba(127,209,163,0);}}
+
+  /* ---------- moments ---------- */
+  .moments{display:grid;gap:10px;}
+  .moment{display:grid;grid-template-columns:46px 1fr;gap:15px;align-items:center;background:var(--paper-card);
+    border:1px solid var(--ink-hair);border-left-width:5px;border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);}
+  .moment .mn{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1.8rem;line-height:1;text-align:center;}
+  .moment .mb b{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:1.02rem;display:block;}
+  .moment .mb small{color:var(--asphalt-soft);font-size:.86rem;line-height:1.45;}
+  .moment.m1{border-left-color:var(--redrock);} .moment.m1 .mn{color:var(--redrock);}
+  .moment.m2{border-left-color:var(--salt);} .moment.m2 .mn{color:var(--salt);}
+  .moment.m3{border-left-color:var(--plains);} .moment.m3 .mn{color:var(--plains);}
+  .moment.m4{border-left-color:var(--pine);} .moment.m4 .mn{color:var(--pine);}
+  .moment.m5{border-left-color:var(--bay);} .moment.m5 .mn{color:var(--bay);}
+
+  /* ---------- enjoy cards ---------- */
+  .enjoy{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .ecard{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:13px;padding:18px 20px;box-shadow:var(--shadow);}
+  .ecard h4{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:1.08rem;margin:0 0 4px;display:flex;align-items:center;gap:9px;}
+  .ecard h4 .ico{font-size:1.15rem;line-height:1;}
+  .ecard .sub{font-size:.82rem;color:var(--asphalt-soft);margin-bottom:12px;}
+  .ecard ul{margin:0;padding:0;list-style:none;}
+  .ecard li{padding:7px 0 7px 16px;position:relative;border-bottom:1px solid var(--ink-faint);font-size:.9rem;line-height:1.5;}
+  .ecard li:last-child{border-bottom:none;}
+  .ecard li::before{content:"";position:absolute;left:0;top:13px;width:6px;height:6px;border-radius:50%;background:var(--sign-green);}
+  .ecard li b{font-weight:700;}
+  .ecard li .day-tag{font-family:"Space Mono",monospace;font-size:.7rem;color:var(--asphalt-soft);}
+  @media (max-width:720px){.enjoy{grid-template-columns:1fr;}}
+
+  /* ---------- weather strip ---------- */
+  .weather{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:4px;}
+  .wcard{background:var(--paper-card);border:1px solid var(--ink-hair);border-top-width:4px;border-radius:11px;padding:13px 15px;box-shadow:var(--shadow);}
+  .wcard .wr{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:.72rem;color:var(--asphalt-soft);}
+  .wcard .wt{font-family:"Space Mono",monospace;font-weight:700;font-size:1.25rem;margin:3px 0 3px;}
+  .wcard .wd{font-size:.78rem;color:var(--asphalt-soft);line-height:1.42;}
+  .wcard.w1{border-top-color:var(--plains);} .wcard.w2{border-top-color:var(--redrock);}
+  .wcard.w3{border-top-color:var(--salt);} .wcard.w4{border-top-color:var(--pine);} .wcard.w5{border-top-color:var(--bay);}
+  @media (max-width:720px){.weather{grid-template-columns:1fr 1fr;}}
+
+  /* ---------- readiness meter + interactive checklist ---------- */
+  .ready{margin-bottom:18px;background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:12px;padding:15px 20px;box-shadow:var(--shadow);}
+  .ready .rt{display:flex;justify-content:space-between;align-items:baseline;font-family:"Saira Condensed",sans-serif;
+    text-transform:uppercase;letter-spacing:.06em;font-size:.86rem;margin-bottom:9px;}
+  .ready .rt b{font-size:1.15rem;color:var(--sign-green-deep);}
+  .ready .bar{height:10px;border-radius:6px;background:var(--ink-faint);overflow:hidden;}
+  .ready .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pine),var(--sign-green));border-radius:6px;transition:width .45s ease;}
+  .ready .hint{font-size:.78rem;color:var(--asphalt-soft);margin-top:9px;}
+  .panel ul li,.checklist ul li{cursor:pointer;-webkit-user-select:none;user-select:none;transition:opacity .15s,color .15s;}
+  .panel ul li:hover,.checklist ul li:hover{opacity:.78;}
+  .panel li.done{color:var(--asphalt-soft);text-decoration:line-through;text-decoration-color:var(--ink-hair);}
+  .checklist li.done{color:#9fb0a6;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.28);}
+  .checklist li.done b{color:#9fb0a6;}
+  .checklist li.done::before{background:#7fd1a3;}
 </style>
 </head>
 <body>
@@ -321,6 +380,7 @@
   <!-- ===================== HERO ===================== -->
   <header class="hero">
     <div class="eyebrow">5-Day Relocation Drive · June 2026</div>
+    <div class="countdown" id="countdown" hidden><span class="dotpulse"></span><span id="cd-text">Loading…</span></div>
     <h1 class="route-title">Pittsburg, KS <span class="arrow">→</span><br>Fremont, CA</h1>
     <p class="route-sub">Take the beautiful I-70 mountain and red-rock route west, sleep cheap every night, and turn the long Nevada stretch into a small-town casino crawl instead of a transit slog. Two drivers, one Kia Soul, and a coast into California on the cheapest gas you can find.</p>
 
@@ -354,6 +414,19 @@
     <div class="eyebrow">The big idea</div>
     <p style="margin:8px 0 0">Beauty is the whole point of this route — so the plan spends the budget where it matters and saves everywhere else. <b>Gas is the biggest and most fixable cost:</b> buy it cheap in Kansas, Colorado, and Utah, then coast into California on near-empty. Every hotel is already booked at a free or fixed rate.</p>
   </div>
+
+  <!-- ===================== DON'T-MISS MOMENTS ===================== -->
+  <section id="moments">
+    <div class="sec-head"><h2>Five moments to savor</h2></div>
+    <p class="sec-lead">The whole drive is good, but these are the five you'll still be talking about. Slow down, pull off where it's safe, and let the passenger run the camera.</p>
+    <div class="moments">
+      <div class="moment m1"><div class="mn">1</div><div class="mb"><b>Cresting the Eisenhower Tunnel · Day 2</b><small>11,158 ft — the highest point on the entire U.S. Interstate system. You punch through the Continental Divide and the whole west opens up on the far side.</small></div></div>
+      <div class="moment m2"><div class="mn">2</div><div class="mb"><b>I-70 slicing the San Rafael Reef · Day 2</b><small>The road knifes clean through tilted red-rock fins west of Green River. Best light is mid-afternoon, exactly when you'll be there.</small></div></div>
+      <div class="moment m3"><div class="mn">3</div><div class="mb"><b>Standing on the Bonneville Salt Flats · Day 3</b><small>Pull in at the rest area, walk out onto the salt, and look back at the mountains floating on the heat shimmer. Nowhere else looks like this.</small></div></div>
+      <div class="moment m4"><div class="mn">4</div><div class="mb"><b>A Basque dinner in Elko · Day 3</b><small>Family-style, passed-platter, more food than you can finish at The Star — a living piece of Nevada's sheepherding history and the best meal on the route.</small></div></div>
+      <div class="moment m5"><div class="mn">5</div><div class="mb"><b>Donner Lake from the pass · Day 4</b><small>The last great view before California — granite, pines, and the blue lake 1,000 ft below, right before the long coast down into the Bay.</small></div></div>
+    </div>
+  </section>
 
   <!-- ===================== ROUTE AT A GLANCE ===================== -->
   <section id="glance">
@@ -697,12 +770,74 @@
                 <div><div class="name">Holiday Inn Express Fremont–Milpitas Central</div><div class="addr">Your new base · 10-night stay</div></div>
                 <span class="badge">Destination</span>
               </div>
-              <div class="fine"><b>At the desk:</b> a refundable $100 hold goes on a card — keep that headroom free. <b>Heads-up:</b> the reservation was booked single-occupancy; if both of you are staying, add the second guest at check-in to avoid any issue.</div>
+              <div class="fine"><b>At the desk:</b> a refundable $100 hold goes on a card — keep that headroom free. <b>Second guest confirmed ✓</b> — both travelers are on the reservation, so check-in is straightforward.</div>
             </div>
           </div>
         </div>
       </article>
 
+    </div>
+  </section>
+
+  <!-- ===================== ENJOY THE DRIVE ===================== -->
+  <section id="enjoy">
+    <div class="sec-head"><h2>Make the drive enjoyable</h2></div>
+    <p class="sec-lead">You're in the car for about 32 hours over five days. A little prep turns the long stretches from a slog into the best part — download everything before you leave, because Utah and Nevada go dark for long miles.</p>
+    <div class="enjoy">
+      <div class="ecard">
+        <h4><span class="ico">🎧</span> Audio for the miles</h4>
+        <div class="sub">~32 hr of driving · download it all offline first</div>
+        <ul>
+          <li><b>An audiobook for Day 1.</b> 9.5 flat hours across Kansas is perfect for one long listen — pick something 8–12 hr so it carries the whole day.</li>
+          <li><b>A road-trip playlist, downloaded.</b> Build 4–5 hr and let it repeat; streaming dies in the UT/NV dead-zones, so save it for offline.</li>
+          <li><b>Two or three podcast episodes</b> queued for Day 3's long Great Basin stretch between casino towns.</li>
+          <li><b>Local AM/FM</b> is your free backup when everything else is downloaded — scan it through the empty stretches for color.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🍔</span> Eat the route</h4>
+        <div class="sub">Cooler for most meals, a few worth stopping for</div>
+        <ul>
+          <li><b>Green River, UT — Ray's Tavern</b> <span class="day-tag">Day 2</span> a legendary road burger right where you fuel up before the Swell.</li>
+          <li><b>Elko, NV — The Star</b> <span class="day-tag">Day 3</span> family-style Basque; come hungry, it's the meal of the trip.</li>
+          <li><b>Battle Mountain — Owl Club</b> <span class="day-tag">Day 3</span> huge steaks and a salad bar if you'd rather a late lunch.</li>
+          <li><b>Truckee, CA — first In-N-Out</b> <span class="day-tag">Day 4</span> the classic "welcome to California" stop just over the pass.</li>
+          <li><b>Cooler discipline</b> keeps food near $110 — refill ice each morning at the hotel and you're covered through the desert.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">📷</span> Golden hour &amp; photo stops</h4>
+        <div class="sub">Shoot from pull-offs, never at speed</div>
+        <ul>
+          <li><b>Red rock glows late.</b> The San Rafael Swell's best light is mid-to-late afternoon — right on your Day 2 schedule.</li>
+          <li><b>Salt flats at midday</b> are blinding but surreal; the white plain and mountain mirage photograph like nowhere else. Sunglasses on.</li>
+          <li><b>Donner Lake overlook</b> is the Day 4 keeper — stop at the vista, don't try to shoot it rolling.</li>
+          <li><b>Mission Peak</b> is your first Bay landmark on arrival — and a great first hike once you're settled in Fremont.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">⚡</span> Stay fresh, stay safe</h4>
+        <div class="sub">The difference between arriving wrecked and arriving happy</div>
+        <ul>
+          <li><b>Swap drivers every ~2 hours</b> and stop the moment either of you feels drowsy — there's no medal for pushing through.</li>
+          <li><b>Hydrate more than feels necessary</b> — high desert dries you out fast and dehydration reads as fatigue.</li>
+          <li><b>Time your caffeine</b> for the early afternoon dip, not 4 PM, so you still sleep before the next early start.</li>
+          <li><b>Stretch at every fuel stop</b> — a two-minute walk around the car resets your back and your focus.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WEATHER ===================== -->
+  <section id="weather-sec">
+    <div class="sec-head"><h2>Weather &amp; what to wear</h2></div>
+    <p class="sec-lead">Mid-June across these five regions means hot valleys and cool passes in the same day. Pack in layers — a t-shirt for the desert and a light jacket for the mountains, both within reach. Typical daytime highs:</p>
+    <div class="weather">
+      <div class="wcard w1"><div class="wr">KS plains · D1</div><div class="wt">~85°F</div><div class="wd">Warm and humid; watch for afternoon thunderstorms rolling across the plains.</div></div>
+      <div class="wcard w2"><div class="wr">CO/UT mountains · D2</div><div class="wt">60–80°F</div><div class="wd">Cool and crisp up top — it can be 40s at the tunnel — then hot, dry red rock by Green River.</div></div>
+      <div class="wcard w3"><div class="wr">Great Basin · D3</div><div class="wt">~90°F</div><div class="wd">Hot, bone-dry days and cool nights. Salt-flat glare is intense — sunglasses essential.</div></div>
+      <div class="wcard w4"><div class="wr">Sierra · D4</div><div class="wt">~70°F</div><div class="wd">Mild and pine-fresh at Donner; warming fast as you drop into the Central Valley.</div></div>
+      <div class="wcard w5"><div class="wr">The Bay · D5</div><div class="wt">~72°F</div><div class="wd">Mild and breezy — classic Fremont June. A light layer for the evening marine air.</div></div>
     </div>
   </section>
 
@@ -748,7 +883,8 @@
       <div class="panel">
         <h4>No-spare plan</h4>
         <ul>
-          <li class="warn"><b>Tire plug kit + 12V compressor</b> (~$25–35, Walmart/AutoZone) — fixes the common nail puncture roadside in ~15 min</li>
+          <li class="done"><b>Tire repair (plug) kit — packed ✓</b></li>
+          <li>Confirm it can <b>reinflate</b> too — a 12V compressor or CO2 cartridges; a plug seals the hole but won't put air back in</li>
           <li>Confirm <b>roadside assistance</b>: auto insurance, Discover card benefits, any leftover Kia roadside</li>
           <li>A sidewall blowout can't be plugged — that's the tow case, and a UT/NV desert tow is long and pricey</li>
           <li>A can of Fix-a-Flat is cheap backup insurance</li>
@@ -758,15 +894,15 @@
         <h4>Documents — glovebox folder</h4>
         <ul>
           <li class="done">Temp registration tag — valid through July 9, covers the trip</li>
-          <li>Bill of sale, proof of insurance, Kansas license</li>
+          <li class="done">Bill of sale, proof of insurance, Kansas license</li>
           <li>Printed/offline copies of all 4 hotel confirmations</li>
         </ul>
       </div>
       <div class="panel">
         <h4>Pack</h4>
         <ul>
-          <li>Cooler + groceries + a case of water (covers the empty desert stretches)</li>
-          <li>Sunglasses (salt-flat glare), light jacket (passes are cool even in June)</li>
+          <li class="done">Cooler + groceries + a case of water (covers the empty desert stretches)</li>
+          <li class="done">Sunglasses (salt-flat glare), light jacket (passes are cool even in June)</li>
           <li>Offline Google Maps for <b>Utah and Nevada</b> — long dead-zones</li>
           <li>First-aid kit, paper towels, trash bags, power bank</li>
         </ul>
@@ -790,15 +926,23 @@
 
   <!-- ===================== FINAL CHECKLIST ===================== -->
   <section id="reminders">
+    <div class="ready">
+      <div class="rt"><span>Trip readiness</span><span><b id="ready-pct">0%</b> ready</span></div>
+      <div class="bar"><i id="ready-fill"></i></div>
+      <div class="hint" id="ready-hint">Tap any item below to check it off — your progress is saved on this device.</div>
+    </div>
     <div class="checklist">
       <div class="eyebrow">Before the engine starts</div>
       <ul>
-        <li><b>Buy the tire plug kit + 12V compressor</b> and confirm roadside assistance</li>
+        <li class="done">Tire repair (plug) kit — packed</li>
+        <li>Confirm roadside assistance (insurance / Discover / Kia)</li>
         <li>Inspect all 4 tires — tread, sidewalls, pressure</li>
+        <li>Download offline maps for Utah and Nevada</li>
         <li>Top off gas in Green River, UT (Day 2) and Nevada (Day 4)</li>
-        <li>Pack cooler, water, sunglasses, light jacket, offline maps</li>
-        <li>Glovebox: temp tag, insurance, bill of sale, license, hotel confirmations</li>
-        <li>Add the 2nd guest to the Fremont reservation if both are staying</li>
+        <li>Print or save offline the 4 hotel confirmations</li>
+        <li class="done">Pack cooler, water, sunglasses, light jacket</li>
+        <li class="done">Glovebox: temp tag, insurance, bill of sale, license</li>
+        <li class="done">Add the 2nd guest to the Fremont reservation</li>
       </ul>
     </div>
   </section>
@@ -984,6 +1128,72 @@
     entries.forEach(function(e){ if(e.isIntersecting){ e.target.style.animationPlayState="running"; io.unobserve(e.target);} });
   },{threshold:.12});
   days.forEach(function(d){io.observe(d);});
+})();
+
+// ---- live countdown to departure ----
+(function(){
+  var box=document.getElementById("countdown"), txt=document.getElementById("cd-text");
+  if(!box||!txt) return;
+  var depart=Date.UTC(2026,5,14,10,0,0);   // Sun Jun 14 2026, 5:00 AM CDT
+  var arrive=Date.UTC(2026,5,18,22,0,0);    // Thu Jun 18, ~3 PM PDT check-in
+  function tick(){
+    var now=Date.now(), d=depart-now;
+    if(d>0){
+      var days=Math.floor(d/864e5), hrs=Math.floor(d%864e5/36e5), mins=Math.floor(d%36e5/6e4);
+      txt.innerHTML = days>=1
+        ? '<b>'+days+(days===1?' day':' days')+'</b> &amp; '+hrs+' hr to departure'
+        : '<b>'+hrs+' hr '+mins+' min</b> to departure';
+    } else if(now<arrive){
+      var dayNo=Math.min(5,Math.floor((now-depart)/864e5)+1);
+      txt.innerHTML='<b>On the road</b> · Day '+dayNo+' of 5';
+    } else {
+      txt.innerHTML='<b>Arrived in Fremont</b> · welcome home 🎉';
+    }
+    box.hidden=false;
+  }
+  tick(); setInterval(tick,30000);
+})();
+
+// ---- interactive, saved checklists + readiness meter ----
+(function(){
+  var KEY="roadtrip-checks-v1", store={};
+  try{ store=JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ store={}; }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
+  function keyOf(li){ return (li.textContent||"").trim().replace(/\s+/g," ").slice(0,90); }
+
+  var fill=document.getElementById("ready-fill"), pct=document.getElementById("ready-pct"), hint=document.getElementById("ready-hint");
+  function meter(){
+    var items=document.querySelectorAll("#reminders .checklist ul li");
+    if(!items.length||!fill) return;
+    var done=0; [].forEach.call(items,function(li){ if(li.classList.contains("done")) done++; });
+    var p=Math.round(done/items.length*100);
+    fill.style.width=p+"%"; if(pct) pct.textContent=p+"%";
+    if(hint) hint.textContent = p===100
+      ? "Everything's checked — you're ready to roll. Safe travels! 🚗"
+      : (done+" of "+items.length+" done · tap an item to toggle it. Saved on this device.");
+  }
+
+  var lists=document.querySelectorAll("#prep .panel ul, #reminders .checklist ul");
+  [].forEach.call(lists,function(ul){
+    [].forEach.call(ul.children,function(li){
+      if(li.tagName!=="LI") return;
+      var k=keyOf(li);
+      if(k in store) li.classList.toggle("done",!!store[k]);
+      else store[k]=li.classList.contains("done");
+      li.setAttribute("role","button");
+      li.setAttribute("tabindex","0");
+      li.setAttribute("aria-pressed",li.classList.contains("done")?"true":"false");
+      function toggle(){
+        var on=!li.classList.contains("done");
+        li.classList.toggle("done",on);
+        li.setAttribute("aria-pressed",on?"true":"false");
+        store[k]=on; save(); meter();
+      }
+      li.addEventListener("click",toggle);
+      li.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
+    });
+  });
+  save(); meter();
 })();
 </script>
 </body>
