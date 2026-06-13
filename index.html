@@ -8,6 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15643f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Road Trip">
 <style>
   :root{
     --paper:#eef0e9;
@@ -371,14 +376,216 @@
   .checklist li.done{color:#9fb0a6;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.28);}
   .checklist li.done b{color:#9fb0a6;}
   .checklist li.done::before{background:#7fd1a3;}
+
+  /* ---------- map interactivity ---------- */
+  .mapfilter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}
+  .mapfilter button{font-family:"Saira Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    font-size:.8rem;cursor:pointer;background:var(--paper-card);color:var(--asphalt);border:1px solid var(--ink-hair);
+    border-radius:30px;padding:7px 15px;transition:background .15s,color .15s,border-color .15s;box-shadow:var(--shadow);}
+  .mapfilter button:hover{border-color:var(--asphalt-soft);}
+  .mapfilter button.active{color:#fff;border-color:transparent;}
+  .mapfilter button[data-day="0"].active{background:var(--asphalt);}
+  .mapfilter button[data-day="1"].active{background:var(--plains);}
+  .mapfilter button[data-day="2"].active{background:var(--redrock);}
+  .mapfilter button[data-day="3"].active{background:var(--salt);}
+  .mapfilter button[data-day="4"].active{background:var(--pine);}
+  .mapfilter button[data-day="5"].active{background:var(--bay);}
+  .map-legend .ml-row[data-stop]{cursor:pointer;border-radius:6px;padding:3px 5px;margin:0 -5px;transition:background .15s;}
+  .map-legend .ml-row[data-stop]:hover{background:rgba(27,33,40,.08);}
+  .leaflet-popup-content .gmaps{display:inline-block;margin-top:8px;font-family:"Saira Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;color:var(--sign-green-deep);text-decoration:none;}
+  .leaflet-popup-content .gmaps:hover{text-decoration:underline;}
+  .maphint{font-size:.78rem;color:var(--asphalt-soft);margin-top:11px;}
+  .viewmap{display:inline-flex;align-items:center;gap:5px;margin-top:12px;font-family:"Saira Condensed",sans-serif;font-weight:600;
+    text-transform:uppercase;letter-spacing:.06em;font-size:.7rem;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;
+    border:1px solid rgba(255,255,255,.45);border-radius:20px;padding:5px 12px;transition:background .15s;}
+  .viewmap:hover{background:rgba(255,255,255,.30);}
+  .leaflet-tooltip.rt-tt{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+    font-size:.72rem;background:var(--asphalt);color:#fff;border:none;box-shadow:var(--shadow);padding:4px 9px;}
+  .leaflet-tooltip.rt-tt.leaflet-tooltip-top::before{border-top-color:var(--asphalt);}
+  .note.warnnote{border-left:5px solid var(--redrock);}
+
+  /* ---------- "today" highlight ---------- */
+  .day.istoday .daycard{outline:3px solid var(--sign-green);outline-offset:3px;}
+  .todaybadge{display:inline-block;font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;
+    letter-spacing:.1em;font-size:.66rem;background:#7fd1a3;color:var(--sign-green-deep);border-radius:20px;padding:3px 11px;margin-left:10px;vertical-align:middle;}
+  .todaybanner{display:none;align-items:center;gap:12px;margin:0 0 18px;background:var(--sign-green);color:#fff;
+    border-radius:12px;padding:13px 18px;box-shadow:var(--shadow);}
+  .todaybanner.show{display:flex;}
+  .todaybanner b{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:1.1rem;}
+  .todaybanner button{margin-left:auto;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;
+    letter-spacing:.05em;font-size:.74rem;cursor:pointer;background:rgba(255,255,255,.2);color:#fff;
+    border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:6px 13px;}
+
+  /* ---------- interactive tools (calc + tracker) ---------- */
+  .tool{background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:13px;padding:18px 20px;box-shadow:var(--shadow);}
+  .tool h4{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:1.08rem;margin:0 0 4px;display:flex;align-items:center;gap:9px;}
+  .tool .sub{font-size:.82rem;color:var(--asphalt-soft);margin-bottom:14px;}
+  .calc-in{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+  .calc-in label{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:.74rem;color:var(--asphalt-soft);display:flex;flex-direction:column;gap:5px;}
+  .calc-in input,.track input{font-family:"Space Mono",monospace;font-size:1rem;width:120px;padding:8px 10px;border:1px solid var(--ink-hair);border-radius:8px;background:#fff;color:var(--asphalt);}
+  .calc-in input:focus,.track input:focus{outline:2px solid var(--sign-green);border-color:transparent;}
+  .calc-row,.track-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:9px 0;border-bottom:1px solid var(--ink-faint);align-items:baseline;font-size:.92rem;}
+  .calc-row:last-of-type{border-bottom:none;}
+  .calc-row .mi,.calc-row .amt,.track-row .amt{font-family:"Space Mono",monospace;}
+  .calc-row .amt,.track-row .amt{font-weight:700;text-align:right;min-width:74px;}
+  .calc-total,.track-total{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--sign-green);color:#fff;align-items:baseline;}
+  .calc-total .lbl,.track-total .lbl{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+  .calc-total .amt,.track-total .amt{font-family:"Space Mono",monospace;font-weight:700;font-size:1.35rem;text-align:right;}
+  .track-row{grid-template-columns:1fr auto auto;}
+  .track-row .plan{font-family:"Space Mono",monospace;color:var(--asphalt-soft);font-size:.8rem;text-align:right;min-width:60px;}
+  .track-row input{width:92px;text-align:right;}
+  .track .delta{font-size:.82rem;margin-top:9px;font-family:"Space Mono",monospace;}
+  .track .delta.under{color:var(--sign-green-deep);} .track .delta.over{color:var(--redrock);}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:720px){.twocol{grid-template-columns:1fr;}}
+
+  /* ---------- emergency card ---------- */
+  .emerg{background:var(--asphalt);color:#eef0e9;border-radius:14px;padding:22px 26px;box-shadow:var(--shadow);}
+  .emerg .eyebrow{color:#ff9d7a;}
+  .emerg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin-top:14px;}
+  .emerg .er{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:.92rem;}
+  .emerg .er .k{color:#cdd3d9;}
+  .emerg .er .v{font-family:"Space Mono",monospace;font-weight:700;color:#fff;white-space:nowrap;}
+  .emerg .er a{color:#fff;}
+  .emerg .note2{font-size:.82rem;color:#9fb0a6;margin-top:14px;}
+  @media (max-width:720px){.emerg-grid{grid-template-columns:1fr;}}
+
+  /* ---------- driver rotation ---------- */
+  .rotation{display:grid;gap:14px;}
+  .rotleg .rl-h{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.95rem;margin-bottom:7px;}
+  .rotbar{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--ink-hair);box-shadow:var(--shadow);}
+  .rotbar .stint{flex:1;padding:9px 6px;text-align:center;font-family:"Space Mono",monospace;font-size:.72rem;color:#fff;border-right:1px solid rgba(255,255,255,.35);}
+  .rotbar .stint:last-child{border-right:none;}
+  .rotbar .stint small{display:block;font-size:.64rem;opacity:.9;}
+  .rotbar .a{background:var(--salt);} .rotbar .b{background:var(--pine);} .rotbar .brk{background:var(--plains);flex:0 0 44px;}
+
+  /* ---------- offline / install ---------- */
+  .installbar{display:none;align-items:center;gap:12px;margin:0 0 18px;background:var(--paper-card);border:1px solid var(--ink-hair);
+    border-left:5px solid var(--sign-green);border-radius:12px;padding:13px 18px;box-shadow:var(--shadow);font-size:.9rem;}
+  .installbar.show{display:flex;}
+  .installbar .oi{font-size:1.3rem;line-height:1;}
+  .installbar button{margin-left:auto;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    font-size:.74rem;cursor:pointer;background:var(--sign-green);color:#fff;border:none;border-radius:20px;padding:8px 15px;white-space:nowrap;}
+  .offnote{font-size:.78rem;color:var(--asphalt-soft);margin-top:10px;}
+
+  /* ---------- sticky section nav ---------- */
+  section[id],header[id]{scroll-margin-top:58px;}
+  .topnav{position:sticky;top:0;z-index:600;background:rgba(238,240,233,.93);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--ink-hair);}
+  .topnav .tn-in{display:flex;gap:4px;overflow-x:auto;padding:9px 0;scrollbar-width:none;-ms-overflow-style:none;}
+  .topnav .tn-in::-webkit-scrollbar{display:none;}
+  .topnav a{flex:none;font-family:"Saira Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+    font-size:.78rem;color:var(--asphalt-soft);text-decoration:none;padding:6px 12px;border-radius:20px;white-space:nowrap;transition:background .15s,color .15s;}
+  .topnav a:hover{color:var(--asphalt);background:rgba(27,33,40,.06);}
+  .topnav a.active{color:#fff;background:var(--sign-green);}
+
+  /* ---------- back to top ---------- */
+  .totop{position:fixed;right:18px;bottom:18px;z-index:700;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--asphalt);color:#fff;font-size:1.25rem;line-height:1;box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .25s,transform .25s;}
+  .totop.show{opacity:1;pointer-events:auto;transform:none;}
+
+  /* ---------- photo lightbox ---------- */
+  figure.shot img{cursor:zoom-in;}
+  .lightbox{position:fixed;inset:0;z-index:900;background:rgba(15,18,22,.93);display:none;align-items:center;justify-content:center;padding:24px;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:96%;max-height:86%;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.55);}
+  .lightbox .lb-cap{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#eef0e9;font-size:.86rem;padding:0 24px;}
+  .lightbox .lb-close{position:absolute;top:14px;right:20px;font-size:2.1rem;color:#fff;cursor:pointer;line-height:1;background:none;border:none;}
+
+  /* ---------- elevation hover ---------- */
+  .elev svg .ev-line{stroke:var(--asphalt);stroke-width:1;stroke-dasharray:3 3;opacity:.5;}
+  .elev svg .ev-dot{fill:var(--sign-green);stroke:#fff;stroke-width:2;}
+  .elev svg .ev-rd{font-family:"Space Mono",monospace;font-size:13px;fill:var(--asphalt);font-weight:700;}
+  .elev .ev-hint{font-size:.74rem;color:var(--asphalt-soft);margin-top:7px;text-align:center;}
+
+  /* ---------- youtube embed ---------- */
+  .ytembed{position:relative;padding-bottom:56.25%;height:0;border-radius:11px;overflow:hidden;border:1px solid var(--ink-hair);box-shadow:var(--shadow);}
+  .ytembed iframe{position:absolute;inset:0;width:100%;height:100%;}
+
+  /* ---------- map category chips + emoji pins + fullscreen ---------- */
+  .mapcats{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px;}
+  .mapcats button{font-family:"Saira Condensed",sans-serif;font-weight:600;font-size:.76rem;letter-spacing:.03em;cursor:pointer;
+    background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:20px;padding:6px 12px;color:var(--asphalt);transition:opacity .15s;}
+  .mapcats button.off{opacity:.4;text-decoration:line-through;}
+  .mk-emoji{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid #fff;
+    box-shadow:0 1px 5px rgba(0,0,0,.35);font-size:14px;line-height:1;}
+  .leaflet-bar a.rt-fs{font-size:15px;font-weight:700;line-height:26px;text-align:center;text-decoration:none;color:var(--asphalt);background:#fff;}
+
+  /* casino cap button */
+  .capbtn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:"Saira Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;font-size:.7rem;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;
+    border:1px solid rgba(255,255,255,.45);border-radius:20px;padding:5px 12px;}
+
+  /* floating action buttons (theme + share + pdf) */
+  .fab{position:fixed;left:18px;bottom:18px;z-index:700;display:flex;flex-direction:column;gap:10px;}
+  .fab button{width:46px;height:46px;border-radius:50%;cursor:pointer;background:var(--paper-card);color:var(--asphalt);
+    font-size:1.2rem;line-height:1;box-shadow:var(--shadow);border:1px solid var(--ink-hair);transition:background .15s,color .15s;}
+  .fab button:hover{background:var(--asphalt);color:#fff;}
+
+  /* ---------- dark / night mode ---------- */
+  [data-theme="dark"]{
+    --paper:#13171b; --paper-card:#1e242b; --asphalt:#e7ebe6; --asphalt-soft:#9aa6b0;
+    --ink-faint:rgba(231,235,230,.09); --ink-hair:rgba(231,235,230,.16);
+    --shadow:0 1px 0 rgba(0,0,0,.2),0 8px 30px -18px rgba(0,0,0,.8);
+  }
+  [data-theme="dark"] body{background-image:linear-gradient(rgba(231,235,230,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(231,235,230,.022) 1px,transparent 1px);}
+  [data-theme="dark"] .bigidea,[data-theme="dark"] .fuelbox,[data-theme="dark"] .checklist,[data-theme="dark"] .emerg,[data-theme="dark"] .countdown,[data-theme="dark"] .totop{background:#0c1014;}
+  [data-theme="dark"] .topnav{background:rgba(15,18,22,.93);}
+  [data-theme="dark"] .map-legend{background:rgba(18,22,27,.93);}
+  [data-theme="dark"] .calc-in input,[data-theme="dark"] .track input{background:#0c1014;color:#e7ebe6;border-color:var(--ink-hair);}
+  [data-theme="dark"] .lodge{background:#161b21;}
+  [data-theme="dark"] .mk-start{background:#e7ebe6;}
+  [data-theme="dark"] .leaflet-tooltip.rt-tt{background:#0c1014;}
+  [data-theme="dark"] .leaflet-tooltip.rt-tt.leaflet-tooltip-top::before{border-top-color:#0c1014;}
+  [data-theme="dark"] .fab button{background:#1e242b;color:#e7ebe6;}
+  [data-theme="dark"] figure.shot figcaption{background:#161b21;}
+  [data-theme="dark"] .mk-emoji{background:#1e242b;}
+
+  /* ---------- print / Save as PDF ---------- */
+  @media print{
+    .topnav,.fab,.totop,.installbar,.todaybanner,.mapfilter,.mapcats,.maphint,.viewmap,.lightbox,.ytembed,.leaflet-control-container{display:none!important;}
+    .bigidea,.fuelbox,.checklist,.emerg{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    section{break-inside:avoid;}
+    .day{break-inside:avoid;}
+    body{background:#fff;}
+    #map{height:320px;}
+  }
 </style>
 </head>
 <body>
 
 <div class="wrap">
 
+  <div class="installbar" id="installbar">
+    <span class="oi">📶</span>
+    <span><b>Heading into the desert dead zones?</b> Install this guide so it works with no signal.</span>
+    <button type="button" id="installbtn">Add to phone</button>
+  </div>
+  <div class="todaybanner" id="todaybanner">
+    <span id="todaybanner-text"></span>
+    <button type="button" id="todaybanner-btn">Jump to today →</button>
+  </div>
+
+  <nav class="topnav" id="topnav" aria-label="Section navigation">
+    <div class="tn-in">
+      <a href="#top">Top</a>
+      <a href="#glance">Route</a>
+      <a href="#map-sec">Map</a>
+      <a href="#days">Days</a>
+      <a href="#gas">Gas</a>
+      <a href="#enjoy">Enjoy</a>
+      <a href="#toolkit">Toolkit</a>
+      <a href="#budget">Budget</a>
+      <a href="#prep">Prep</a>
+      <a href="#emergency">SOS</a>
+      <a href="#bay">Bay</a>
+    </div>
+  </nav>
+
   <!-- ===================== HERO ===================== -->
-  <header class="hero">
+  <header class="hero" id="top">
     <div class="eyebrow">5-Day Relocation Drive · June 2026</div>
     <div class="countdown" id="countdown" hidden><span class="dotpulse"></span><span id="cd-text">Loading…</span></div>
     <h1 class="route-title">Pittsburg, KS <span class="arrow">→</span><br>Fremont, CA</h1>
@@ -397,6 +604,7 @@
         <span class="s">Elevation, Pittsburg → Fremont · two passes bracket the high-desert middle</span>
       </figcaption>
       <svg id="elevsvg" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Elevation profile of the route, climbing to 11,158 ft at Eisenhower Tunnel and 7,056 ft at Donner Pass before dropping to sea level at the Bay."></svg>
+      <div class="ev-hint">Hover or drag across the chart to read elevation at any mile.</div>
     </figure>
 
     <!-- signage stats -->
@@ -481,16 +689,30 @@
   <!-- ===================== MAP ===================== -->
   <section id="map-sec">
     <div class="sec-head"><h2>The route, mapped</h2></div>
-    <p class="sec-lead">Each leg is drawn in its landscape color, and every exact spot below is dropped as a pin — the numbered circles are your overnight stops, the small dots are the named scenic and fuel waypoints (Eisenhower Tunnel, the San Rafael Reef, the Tree of Utah, Donner Pass and more). Tap any marker for details; you'll find photos of the marquee spots down in the day-by-day.</p>
+    <p class="sec-lead">Each leg is drawn in its landscape color, and every exact spot below is dropped as a pin — the numbered circles are your overnight stops, the small dots are the named scenic and fuel waypoints (Eisenhower Tunnel, the San Rafael Reef, the Tree of Utah, Donner Pass and more). Tap a day to zoom its leg, or click any marker for details and one-tap directions.</p>
+    <div class="mapfilter" id="mapfilter">
+      <button type="button" data-day="0" class="active">Whole route</button>
+      <button type="button" data-day="1">Day 1</button>
+      <button type="button" data-day="2">Day 2</button>
+      <button type="button" data-day="3">Day 3</button>
+      <button type="button" data-day="4">Day 4</button>
+      <button type="button" data-day="5">Day 5</button>
+    </div>
+    <div class="mapcats" id="mapcats">
+      <button type="button" data-cat="hotel">🏨 Hotels</button>
+      <button type="button" data-cat="fuel">⛽ Fuel</button>
+      <button type="button" data-cat="scenic">📷 Scenic</button>
+      <button type="button" data-cat="food">🍔 Food</button>
+    </div>
     <div class="mapwrap">
       <div id="map" role="img" aria-label="Map of the route from Pittsburg, Kansas to Fremont, California following Interstate 70 and Interstate 80, with five overnight stops and key scenic waypoints."></div>
       <div class="map-legend">
-        <div class="ml-title">Overnight stops</div>
-        <div class="ml-row"><i style="background:var(--plains)">1</i> Westminster, CO</div>
-        <div class="ml-row"><i style="background:var(--redrock)">2</i> Salina, UT</div>
-        <div class="ml-row"><i style="background:var(--salt)">3</i> Winnemucca, NV</div>
-        <div class="ml-row"><i style="background:var(--pine)">4</i> Manteca, CA</div>
-        <div class="ml-row"><i style="background:var(--bay)">★</i> Fremont, CA</div>
+        <div class="ml-title">Overnight stops · tap to fly</div>
+        <div class="ml-row" data-stop="1"><i style="background:var(--plains)">1</i> Westminster, CO</div>
+        <div class="ml-row" data-stop="2"><i style="background:var(--redrock)">2</i> Salina, UT</div>
+        <div class="ml-row" data-stop="3"><i style="background:var(--salt)">3</i> Winnemucca, NV</div>
+        <div class="ml-row" data-stop="4"><i style="background:var(--pine)">4</i> Manteca, CA</div>
+        <div class="ml-row" data-stop="5"><i style="background:var(--bay)">★</i> Fremont, CA</div>
       </div>
     </div>
     <div class="map-cap">
@@ -498,6 +720,7 @@
       <span>2 passes — Eisenhower 11,158 ft · Donner 7,056 ft</span>
       <span>~2,065 miles end to end</span>
     </div>
+    <p class="maphint">Tap a day above to zoom its leg · click any pin or legend stop for details and one-tap Google Maps directions · click the map to enable scroll-zoom.</p>
   </section>
 
   <!-- ===================== GAS STRATEGY ===================== -->
@@ -517,6 +740,16 @@
         <li><b>Day 2 — critical:</b> top off in <b>Green River, UT</b>. The San Rafael Swell stretch to Salina is <b>~108 miles with zero services.</b></li>
         <li><b>Day 4 — critical:</b> fill up in <b>Nevada</b> (Winnemucca or Fernley) <em>before</em> California, then coast into the Bay and buy as little CA gas as possible.</li>
       </ul>
+    </div>
+
+    <div class="tool" style="margin-top:16px">
+      <h4><span class="ico">⛽</span> Fuel cost calculator</h4>
+      <div class="sub">Punch in a price and your mpg to estimate each leg. Defaults: $4.20/gal, 29 mpg.</div>
+      <div class="calc-in">
+        <label>Gas price ($/gal)<input type="number" id="fc-price" value="4.20" step="0.05" min="0" inputmode="decimal"></label>
+        <label>MPG<input type="number" id="fc-mpg" value="29" step="1" min="1" inputmode="numeric"></label>
+      </div>
+      <div id="fc-out"></div>
     </div>
   </section>
 
@@ -657,9 +890,13 @@
               <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Salt_Flats_Hexagons_and_Leading_Lines.jpg?width=1100" alt="Hexagonal salt-crust patterns stretching flat to distant mountains on the Bonneville Salt Flats" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
               <figcaption><span>Bonneville Salt Flats — a hexagon-cracked salt plain running dead flat to the mountains, just off I-80 near Wendover</span><span class="coord">40.77°N, 113.83°W</span></figcaption>
             </figure>
+            <figure class="shot wide solo">
+              <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Thomas%20Canyon%20wildflowers%2C%20Ruby%20Mountains%2C%20Nevada%20%2823205919229%29.jpg?width=1100" alt="Wildflowers below the Ruby Mountains near Elko, Nevada" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+              <figcaption><span>The Ruby Mountains on Elko's skyline — June wildflowers in Thomas Canyon, a short drive off I-80</span><span class="coord">40.66°N, 115.50°W</span></figcaption>
+            </figure>
             <div class="spots">
               <div class="spots-h">Exact stops on this leg</div>
-              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Bonneville Salt Flats Rest Area (I-80 Exit 4)<small>A viewing platform right on the salt — the blinding-white plain is one of the flattest places on Earth. Sunglasses on.</small></span><span class="mp">40.77°N, 113.83°W</span></div>
+              <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Bonneville Salt Flats Rest Area (I-80 Exit 4)<small>A viewing platform right on the salt — the blinding-white plain is one of the flattest places on Earth. Sunglasses on. The rest-area view always works; only drive out onto the salt if it's dry (it can stay wet into early June).</small></span><span class="mp">40.77°N, 113.83°W</span></div>
               <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Metaphor: The Tree of Utah (I-80 MM26)<small>An 87-ft concrete-and-stone sculpture rising out of the empty salt — "emergency stopping only," so slow down and look as you pass.</small></span><span class="mp">40.73°N, 113.55°W</span></div>
               <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Wendover — Nevada state line<small>Cross into Nevada and Pacific time; clocks fall back another hour. First casinos if you want a quick pull.</small></span><span class="mp">40.74°N, 114.04°W</span></div>
               <div class="sp"><span class="dot" style="background:var(--salt)"></span><span class="nm">Elko — lunch + crawl stop #1<small>Real downtown, Basque heritage, the Ruby Mountains on the skyline. Lunch at The Star (family-style Basque).</small></span><span class="mp">40.83°N, 115.76°W</span></div>
@@ -678,7 +915,14 @@
             <div class="bits">
               <div class="bit scenery"><b>The I-80 crawl, east → west (all open 24 hr)</b><b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Elko</b> — the big stop: real downtown, Basque heritage, Ruby Mountains on the skyline. Lunch at The Star (classic family-style Basque) or the Gold Dust West Grille. <b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Carlin</b> — tiny; quick gas, then move on. <b style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--asphalt-soft);font-family:Inter">Battle Mountain</b> — old-Nevada character: the Owl Club (huge steaks), The Nevada Bar (sometimes live music), or the Colt (cheap, friendly).</div>
               <div class="bit fuel"><b>Fuel</b>SLC → Wendover or Elko → Winnemucca. NV gas ~$5; fine — you fill again tomorrow before CA.</div>
-              <div class="bit night"><b>Night casino</b>After check-in, play Sundance (friendliest, dive-bar vibe), Pete's Gambling Hall (notably not smoky), or Winners Inn. Drinks are comped while you play. Set a hard cash cap before you walk in — and pace it, you drive in the morning.</div>
+              <div class="bit night"><b>Night casino — the Winnemucca crawl</b>All within a few minutes of the Signature Inn, all open 24 hr:<br>
+                • <b>Winners Inn Casino</b> (across the street) — the biggest floor in town: full slots, table games, and a 24-hr coffee shop if you want a late bite.<br>
+                • <b>Sundance Casino</b> — the friendliest, dive-bar vibe; loosest, lowest-stakes feel and the locals' pick.<br>
+                • <b>Model T Casino</b> (6-min walk) — slots plus an actual A&amp;W; mellow and rarely crowded.<br>
+                <b>How comps work:</b> drinks are free <em>while you're actively playing</em> — tip the server $1–2 a round and they'll keep coming back. Sign up for the free players' card on arrival; even casual slot play earns a little back and sometimes a food credit.<br>
+                <b>Pace it — you drive at 8 AM.</b> Decide your loss limit before you walk in, take exactly that in cash, and leave the cards in the room.
+                <button type="button" class="capbtn" id="set-cap-btn">🎰 Set your cap in the tracker</button>
+              </div>
             </div>
             <div class="lodge">
               <div class="top">
@@ -710,6 +954,10 @@
             <figure class="shot wide solo">
               <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Donner_Lake_as_seen_from_Donner_Pass.jpg?width=1100" alt="Donner Lake seen from Donner Pass, ringed by Sierra Nevada granite and pine" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
               <figcaption><span>Donner Lake from Donner Pass — granite, pine, and the lake below the 7,056 ft Sierra crest, right before the drop into California</span><span class="coord">39.32°N, 120.32°W</span></figcaption>
+            </figure>
+            <figure class="shot wide solo">
+              <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Reno%20Arch%2C%20Reno%2C%20Nevada.jpg?width=1100" alt="The Reno arch over Virginia Street in downtown Reno, Nevada" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+              <figcaption><span>The Reno Arch — your quick Grand Sierra pit stop is right off I-80 before the climb to Donner</span><span class="coord">39.53°N, 119.81°W</span></figcaption>
             </figure>
             <div class="spots">
               <div class="spots-h">Exact stops on this leg</div>
@@ -759,6 +1007,10 @@
           </div>
           <div class="daybody">
             <p>Relaxed morning. Manteca → <b>CA-120 W → I-205 W → I-580 W</b> over Altamont Pass → I-680/I-880 → Fremont/Milpitas. Time it to arrive after <b>3:00 PM</b> check-in — grab an early lunch or unpack the car in the meantime.</p>
+            <figure class="shot wide solo">
+              <img src="https://commons.wikimedia.org/wiki/Special:FilePath/View%20from%20Mission%20Peak%2C%20California.jpg?width=1100" alt="The view from Mission Peak over the South San Francisco Bay in Fremont, California" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('err')">
+              <figcaption><span>The view from Mission Peak over the Bay — the 2,517-ft landmark above your new home base, and a great first hike once you're settled</span><span class="coord">37.51°N, 121.88°W</span></figcaption>
+            </figure>
             <div class="spots">
               <div class="spots-h">Exact stops on this leg</div>
               <div class="sp"><span class="dot" style="background:var(--bay)"></span><span class="nm">Altamont Pass<small>Ridgelines of wind turbines on I-580 — the gateway from the Central Valley into the Bay Area.</small></span><span class="mp">37.73°N, 121.65°W</span></div>
@@ -788,20 +1040,23 @@
         <h4><span class="ico">🎧</span> Audio for the miles</h4>
         <div class="sub">~32 hr of driving · download it all offline first</div>
         <ul>
+          <li><b>Your road-trip playlist is loaded below.</b> You've got <b>YouTube Premium</b> — open it in the YouTube app and tap <b>Download</b> on the playlist so it plays through the UT/NV dead-zones with the screen off.</li>
           <li><b>An audiobook for Day 1.</b> 9.5 flat hours across Kansas is perfect for one long listen — pick something 8–12 hr so it carries the whole day.</li>
-          <li><b>A road-trip playlist, downloaded.</b> Build 4–5 hr and let it repeat; streaming dies in the UT/NV dead-zones, so save it for offline.</li>
           <li><b>Two or three podcast episodes</b> queued for Day 3's long Great Basin stretch between casino towns.</li>
           <li><b>Local AM/FM</b> is your free backup when everything else is downloaded — scan it through the empty stretches for color.</li>
         </ul>
+        <a class="installbar-btnlink" href="https://www.youtube.com/playlist?list=PL-MidNc0qhD5K3_vftDn9hoI_fKwB-pu6" target="_blank" rel="noopener" style="display:inline-block;margin:4px 0 12px;font-family:'Saira Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.74rem;background:var(--sign-green);color:#fff;border-radius:20px;padding:8px 15px;text-decoration:none">▶ Open your playlist on YouTube</a>
+        <div class="ytembed"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=PL-MidNc0qhD5K3_vftDn9hoI_fKwB-pu6" title="Road trip playlist" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
       </div>
       <div class="ecard">
         <h4><span class="ico">🍔</span> Eat the route</h4>
         <div class="sub">Cooler for most meals, a few worth stopping for</div>
         <ul>
+          <li><b>Salina, KS — Cozy Inn</b> <span class="day-tag">Day 1</span> a 1922 six-stool shack slinging tiny onion sliders — Kansas's most famous burger, cheap and fast.</li>
           <li><b>Green River, UT — Ray's Tavern</b> <span class="day-tag">Day 2</span> a legendary road burger right where you fuel up before the Swell.</li>
           <li><b>Elko, NV — The Star</b> <span class="day-tag">Day 3</span> family-style Basque; come hungry, it's the meal of the trip.</li>
           <li><b>Battle Mountain — Owl Club</b> <span class="day-tag">Day 3</span> huge steaks and a salad bar if you'd rather a late lunch.</li>
-          <li><b>Truckee, CA — first In-N-Out</b> <span class="day-tag">Day 4</span> the classic "welcome to California" stop just over the pass.</li>
+          <li><b>Auburn, CA — first In-N-Out</b> <span class="day-tag">Day 4</span> right off I-80 as you drop out of the Sierra — the classic "welcome to California" stop.</li>
           <li><b>Cooler discipline</b> keeps food near $110 — refill ice each morning at the hotel and you're covered through the desert.</li>
         </ul>
       </div>
@@ -841,6 +1096,53 @@
     </div>
   </section>
 
+  <!-- ===================== TRIP-SMART TOOLKIT ===================== -->
+  <section id="toolkit">
+    <div class="sec-head"><h2>Trip-smart toolkit</h2></div>
+    <p class="sec-lead">Researched, route-specific prep that actually changes how you pack and drive. Set this up before you leave — most of it stops working once you're in the desert.</p>
+    <div class="enjoy">
+      <div class="ecard">
+        <h4><span class="ico">📱</span> Apps to set up before you go</h4>
+        <div class="sub">Configure over home Wi-Fi — some won't download on the road</div>
+        <ul>
+          <li><b>Google Maps — offline regions.</b> Download three now: Grand Junction→Salina (the Swell), all of I-80 Wendover→Reno, and Donner→Fremont. Routing then works with zero bars.</li>
+          <li><b>GasBuddy</b> for the cheapest fuel on each leg — Nevada prices swing wildly station to station.</li>
+          <li><b>iExit</b> — exit-by-exit gas/food/restrooms with prices ahead; the tool for "fuel now or push to the next town?"</li>
+          <li><b>AirNow</b> for wildfire smoke / air quality, and <b>Caltrans QuickMap</b> for live Donner Pass cameras and construction.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">📵</span> Where the signal dies</h4>
+        <div class="sub">Two long no-service corridors — prepare specifically</div>
+        <ul>
+          <li><b>I-70, San Rafael Swell (UT):</b> ~106 miles with no fuel and no reliable signal between Green River and Salina. Full tank before you enter — the worst gap on the trip.</li>
+          <li><b>I-80 Nevada basins:</b> coverage holds in the towns (Wendover, Elko, Winnemucca) but drops in the long stretches between. Verizon is weakest out here.</li>
+          <li><b>Before each desert leg:</b> download podcasts/playlists, and text someone your route + ETA so a person knows where you are if you go dark.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🌡️</span> Beat the heat — start early</h4>
+        <div class="sub">Days 3 &amp; 4, the desert legs</div>
+        <ul>
+          <li><b>Leave ~6 AM</b> so the long no-shade basin miles are behind you before the afternoon peak (high 80s–90s°F in June).</li>
+          <li><b>Heat + highway speed is the #1 blowout trigger</b> — and you have no spare. Cooler air is real tire insurance.</li>
+          <li><b>Carry a gallon+ of water per person</b> dedicated to the Swell and the NV basins, on top of your drinking stash.</li>
+          <li><b>Hold ~65–70 mph</b> on the open desert, not 80 — drag climbs fast above 70 and you'll save real fuel in the Soul.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🛞</span> No spare? Plan the tow</h4>
+        <div class="sub">Your single biggest risk — make it a known quantity</div>
+        <ul>
+          <li><b>A plug fixes tread punctures only.</b> Sidewall or shoulder damage means a tow, full stop. After plugging, stay under 50 mph and head straight to a shop.</li>
+          <li><b>A rural UT/NV tow can run $450–$700.</b> Confirm your Progressive roadside covers long-distance towing — and consider <b>AAA Plus (~$100/yr, 100-mile free tows)</b> as cheap backup that matches these gaps.</li>
+          <li><b>Tire-shop towns on I-80:</b> Wendover, Elko, Winnemucca, Fernley/Reno. If a tire feels off, fix it <b>in town</b> — never push into a basin.</li>
+          <li><b>Pack also:</b> a pressure gauge, a can of Fix-a-Flat as backup, and a reflective triangle for roadside visibility.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== BUDGET ===================== -->
   <section id="budget">
     <div class="sec-head"><h2>Budget</h2></div>
@@ -862,6 +1164,14 @@
       <div class="bvar comfort"><div class="h">Comfort</div><div class="a">~$800</div>Mid-tier hotels and a few sit-down meals.</div>
     </div>
     <p style="margin-top:14px;color:var(--asphalt-soft);font-size:.9rem"><b>Not included — nightlife.</b> Gambling, drinks, and covers are on top. Set your own cap; Nevada casinos make it easy to overspend.</p>
+
+    <div class="tool track" id="tracker" style="margin-top:16px">
+      <h4><span class="ico">🧾</span> Track your spend</h4>
+      <div class="sub">Log what you actually spend as you go — saved on this device. See it against the plan in real time.</div>
+      <div id="tr-rows"></div>
+      <div class="track-total"><span class="lbl">Spent so far</span><span class="amt" id="tr-total">$0</span></div>
+      <div class="delta" id="tr-delta"></div>
+    </div>
   </section>
 
   <!-- ===================== PRE-TRIP ===================== -->
@@ -922,6 +1232,60 @@
         <li><b>Salt-flat glare</b> — sunglasses on Day 3; the white plain is blinding.</li>
       </ul>
     </div>
+
+    <h3 style="font-size:1.1rem;text-transform:uppercase;letter-spacing:.04em;margin:24px 0 4px">Driver rotation — the two long days</h3>
+    <p class="sec-lead" style="margin-bottom:14px">Swap at every fuel/break stop (~2 hr) so you're always trading into a fresh driver, never grinding past fatigue. The off-driver naps on these legs.</p>
+    <div class="rotation">
+      <div class="rotleg">
+        <div class="rl-h">Day 1 · Pittsburg → Denver · ~9.5 hr</div>
+        <div class="rotbar">
+          <span class="stint a">A<small>5–7a</small></span>
+          <span class="stint brk">☕<small>brk</small></span>
+          <span class="stint b">B<small>7–9a</small></span>
+          <span class="stint a">A<small>9–11a</small></span>
+          <span class="stint brk">🍔<small>lunch</small></span>
+          <span class="stint b">B<small>11a–1p</small></span>
+          <span class="stint a">A<small>1–3p</small></span>
+        </div>
+      </div>
+      <div class="rotleg">
+        <div class="rl-h">Day 3 · Salina → Winnemucca · ~8.5 hr</div>
+        <div class="rotbar">
+          <span class="stint b">B<small>6–8a</small></span>
+          <span class="stint brk">☕<small>brk</small></span>
+          <span class="stint a">A<small>8–10a</small></span>
+          <span class="stint b">B<small>10a–12p</small></span>
+          <span class="stint brk">🍔<small>Elko</small></span>
+          <span class="stint a">A<small>12–2p</small></span>
+          <span class="stint b">B<small>2–3p</small></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EMERGENCY CARD ===================== -->
+  <section id="emergency">
+    <div class="sec-head"><h2>Glovebox emergency card</h2></div>
+    <p class="sec-lead">Everything you'd need in a bad moment, in one place. Works offline once installed — and prints clean for the glovebox.</p>
+    <div class="emerg">
+      <div class="eyebrow">If something goes wrong</div>
+      <div class="emerg-grid">
+        <div>
+          <div class="er"><span class="k">Emergency (police/fire/medical)</span><span class="v"><a href="tel:911">911</a></span></div>
+          <div class="er"><span class="k">Progressive — roadside / towing</span><span class="v"><a href="tel:18007762778">1-800-776-2778</a></span></div>
+          <div class="er"><span class="k">Progressive — report a claim</span><span class="v"><a href="tel:18002744499">1-800-274-4499</a></span></div>
+          <div class="er"><span class="k">Progressive — policy service</span><span class="v"><a href="tel:18007764737">1-800-776-4737</a></span></div>
+        </div>
+        <div>
+          <div class="er"><span class="k">Auto policy #</span><span class="v">874004488</span></div>
+          <div class="er"><span class="k">Vehicle</span><span class="v">2021 Kia Soul</span></div>
+          <div class="er"><span class="k">VIN</span><span class="v">KNDJ23AU2M7748618</span></div>
+          <div class="er"><span class="k">Non-emergency roads (511)</span><span class="v"><a href="tel:511">511</a></span></div>
+        </div>
+      </div>
+      <p class="note2"><b>No spare — tire-shop towns on the route:</b> Hays KS · Grand Junction CO · Green River &amp; Salina UT · Wendover · Elko · Winnemucca · Fernley/Reno NV · Sacramento CA. If a tire feels off, fix it <b>in town</b> — never push into a basin. After a plug, stay under 50 mph to the nearest shop.</p>
+      <p class="note2"><b>Before you call a tow in a dead zone:</b> note your exact location (mile marker, or screenshot your blue dot while you still have signal) so you can read it to dispatch.</p>
+    </div>
   </section>
 
   <!-- ===================== FINAL CHECKLIST ===================== -->
@@ -945,6 +1309,70 @@
         <li class="done">Add the 2nd guest to the Fremont reservation</li>
       </ul>
     </div>
+  </section>
+
+  <!-- ===================== BAY AREA GUIDE ===================== -->
+  <section id="bay">
+    <div class="sec-head"><h2>After you arrive · the Bay, Jun 18–28</h2></div>
+    <p class="sec-lead">Ten days based in Fremont before life settles in. It's one of the best-placed launch pads in California — world-class day trips in every direction, and BART downtown so you can leave the car parked. Distances are from Fremont.</p>
+    <div class="enjoy">
+      <div class="ecard">
+        <h4><span class="ico">🌉</span> San Francisco</h4>
+        <div class="sub">~50 min by BART · skip the car</div>
+        <ul>
+          <li><b>Take BART from Warm Springs / South Fremont</b> straight downtown — no bridge tolls, no $50 parking, no stress.</li>
+          <li>Ferry Building, the Embarcadero, Golden Gate Park, the Mission for food, and the classic Golden Gate Bridge views from the Marin side.</li>
+          <li>Go on a clear day — summer fog ("Karl") can swallow the city; mornings burn off by midday.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🌊</span> Monterey &amp; Big Sur</h4>
+        <div class="sub">Monterey ~1.5 hr · Big Sur beyond</div>
+        <ul>
+          <li><b>Monterey Bay Aquarium</b> and Cannery Row make a full, easy day trip.</li>
+          <li><b>17-Mile Drive</b> (Pebble Beach) and then <b>CA-1 south into Big Sur</b> — Bixby Bridge, McWay Falls. The coast road is the destination.</li>
+          <li>Check CA-1 is open (slides close sections periodically) before committing to deep Big Sur.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🏔️</span> Yosemite &amp; Tahoe</h4>
+        <div class="sub">Each ~3.5–4 hr · the big ones</div>
+        <ul>
+          <li><b>Yosemite Valley</b> (~190 mi via CA-120) — waterfalls are still strong in June; <b>a reservation may be required</b> to enter midday in summer, so check nps.gov first.</li>
+          <li><b>Lake Tahoe</b> (~200 mi) — Emerald Bay, alpine swims, full-blue June lake. Long day or an overnight.</li>
+          <li>Both are early-start days; treat them like a mini road trip, not an afternoon.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🥾</span> Close to home</h4>
+        <div class="sub">Half-day, right around Fremont</div>
+        <ul>
+          <li><b>Mission Peak</b> — the 2,517-ft landmark over your new base. ~3.3 mi up, ~2,150 ft gain, no shade — go at sunrise, bring water. Park at Ohlone College to dodge the Stanford Ave permit scramble.</li>
+          <li><b>Santa Cruz</b> (~50 min over CA-17) — beach, boardwalk, redwoods nearby.</li>
+          <li><b>Coyote Hills &amp; the Bay Trail</b> in Fremont for an easy flat sunset walk.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">📦</span> First days in Fremont</h4>
+        <div class="sub">Getting set up</div>
+        <ul>
+          <li><b>Groceries:</b> plenty nearby — and a great Indian-grocery scene around Fremont/Warm Springs.</li>
+          <li><b>Rest the car:</b> after 2,065 mi, top off fluids and finally <b>get a real spare or tire repair sorted</b> before daily driving.</li>
+          <li><b>BART card:</b> grab a Clipper card for transit; it works across BART, Muni, and buses.</li>
+          <li>Unpack at a human pace — you just crossed the country.</li>
+        </ul>
+      </div>
+      <div class="ecard">
+        <h4><span class="ico">🍴</span> Eat your way in</h4>
+        <div class="sub">Bay Area first bites</div>
+        <ul>
+          <li><b>Fremont</b> has some of the best Afghan and Indian food in the country — start there.</li>
+          <li><b>SF:</b> a Mission burrito, dim sum in Chinatown, or fresh seafood at the Ferry Building.</li>
+          <li><b>Coast:</b> clam chowder and fish &amp; chips on Monterey's wharf.</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:6px"><a href="bay.html" style="display:inline-block;font-family:'Saira Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.8rem;background:var(--bay);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none">🗺️ Open the full Bay Area map &amp; day-trip guide →</a></p>
   </section>
 
   <footer>
@@ -971,49 +1399,142 @@
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
 
+  // enable scroll-zoom only once the user deliberately interacts with the map
+  map.on('click focus',function(){ map.scrollWheelZoom.enable(); });
+
   // route, traced along I-70 then I-80, split into the five day-legs
   var seg1=[[37.4109,-94.7047],[37.6872,-97.3301],[38.8403,-97.6114],[38.8792,-99.3268],[39.3958,-101.0524],[39.2639,-103.6922],[39.7392,-104.9903],[39.8366,-105.0372]];
   var seg2=[[39.8366,-105.0372],[39.7425,-105.5136],[39.6797,-105.9178],[39.6403,-106.3742],[39.5505,-107.3248],[39.0639,-108.5506],[38.9955,-110.1596],[38.90,-111.00],[38.9577,-111.8594]];
   var seg3=[[38.9577,-111.8594],[39.60,-111.85],[40.7608,-111.8910],[40.7388,-114.0408],[40.8324,-115.7631],[40.7141,-116.1011],[40.6427,-116.9343],[40.9730,-117.7357]];
   var seg4=[[40.9730,-117.7357],[40.1796,-118.4730],[39.6080,-119.2518],[39.5296,-119.8138],[39.3280,-120.1833],[39.3138,-120.3208],[38.5816,-121.4944],[37.7974,-121.2161]];
   var seg5=[[37.7974,-121.2161],[37.7349,-121.6500],[37.6819,-121.7680],[37.5485,-121.9886]];
+  var segs=[seg1,seg2,seg3,seg4,seg5];
+  var segColors=[C.plains,C.redrock,C.salt,C.pine,C.bay];
   var all=seg1.concat(seg2,seg3,seg4,seg5);
 
-  L.polyline(all,{color:'#ffffff',weight:8,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(map);
-  [[seg1,C.plains],[seg2,C.redrock],[seg3,C.salt],[seg4,C.pine],[seg5,C.bay]].forEach(function(s){
-    L.polyline(s[0],{color:s[1],weight:4.5,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(map);
+  var casing=L.polyline(all,{color:'#ffffff',weight:8,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(map);
+  var legLayers=segs.map(function(s,i){
+    return L.polyline(s,{color:segColors[i],weight:4.5,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(map);
   });
 
   function stopIcon(l,c){return L.divIcon({className:'',html:'<div class="mk mk-stop" style="background:'+c+'">'+l+'</div>',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-17]});}
   function startIcon(){return L.divIcon({className:'',html:'<div class="mk mk-start"></div>',iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-11]});}
   function wpIcon(c){return L.divIcon({className:'',html:'<div class="mk mk-wp" style="background:'+c+'"></div>',iconSize:[13,13],iconAnchor:[6,6],popupAnchor:[0,-8]});}
-  function pop(t,s){return '<div class="pop"><b>'+t+'</b>'+(s?'<span>'+s+'</span>':'')+'</div>';}
+  function gm(ll){return '<a class="gmaps" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+ll[0]+','+ll[1]+'">Directions ↗</a>';}
+  function pop(t,s,ll){return '<div class="pop"><b>'+t+'</b>'+(s?'<span>'+s+'</span>':'')+(ll?gm(ll):'')+'</div>';}
+  function tip(m,txt){m.bindTooltip(txt,{className:'rt-tt',direction:'top',offset:[0,-12]});return m;}
 
-  L.marker([37.4109,-94.7047],{icon:startIcon()}).addTo(map).bindPopup(pop('Start · Pittsburg, KS','Depart ~5:00 AM, Day 1'));
-  L.marker([39.8366,-105.0372],{icon:stopIcon('1',C.plains)}).addTo(map).bindPopup(pop('Night 1 · City Inn, Westminster','$66 · booked · Denver area'));
-  L.marker([38.9577,-111.8594],{icon:stopIcon('2',C.redrock)}).addTo(map).bindPopup(pop('Night 2 · Super 8, Salina UT','$91 · booked · the scenic day'));
-  L.marker([40.9730,-117.7357],{icon:stopIcon('3',C.salt)}).addTo(map).bindPopup(pop('Night 3 · Signature Inn, Winnemucca','$88 · booked · casino night'));
-  L.marker([37.7974,-121.2161],{icon:stopIcon('4',C.pine)}).addTo(map).bindPopup(pop('Night 4 · Best Western Plus, Manteca','$89 · booked · refundable'));
-  L.marker([37.5485,-121.9886],{icon:stopIcon('★',C.bay)}).addTo(map).bindPopup(pop('Destination · Fremont, CA','Holiday Inn Express · check-in 3 PM'));
+  var stops=[
+    {ll:[37.4109,-94.7047],ic:startIcon(),t:'Start · Pittsburg, KS',s:'Depart ~5:00 AM, Day 1',tt:'Pittsburg, KS'},
+    {ll:[39.8366,-105.0372],ic:stopIcon('1',C.plains),t:'Night 1 · City Inn, Westminster',s:'$66 · booked · Denver area',tt:'Westminster, CO'},
+    {ll:[38.9577,-111.8594],ic:stopIcon('2',C.redrock),t:'Night 2 · Super 8, Salina UT',s:'$91 · booked · the scenic day',tt:'Salina, UT'},
+    {ll:[40.9730,-117.7357],ic:stopIcon('3',C.salt),t:'Night 3 · Signature Inn, Winnemucca',s:'$88 · booked · casino night',tt:'Winnemucca, NV'},
+    {ll:[37.7974,-121.2161],ic:stopIcon('4',C.pine),t:'Night 4 · Best Western Plus, Manteca',s:'$89 · booked · refundable',tt:'Manteca, CA'},
+    {ll:[37.5485,-121.9886],ic:stopIcon('★',C.bay),t:'Destination · Fremont, CA',s:'Holiday Inn Express · check-in 3 PM',tt:'Fremont, CA'}
+  ];
+  var catGroups={hotel:L.layerGroup().addTo(map),fuel:L.layerGroup().addTo(map),scenic:L.layerGroup().addTo(map),food:L.layerGroup().addTo(map)};
+  var stopMarkers=stops.map(function(st,i){
+    var m=L.marker(st.ll,{icon:st.ic}).bindPopup(pop(st.t,st.s,st.ll));
+    tip(m,st.tt);
+    if(i===0) m.addTo(map); else m.addTo(catGroups.hotel);   // start always on; nights toggle with Hotels
+    return m;
+  });
+  function emojiIcon(e){return L.divIcon({className:'',html:'<div class="mk-emoji">'+e+'</div>',iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15]});}
+  var wpType={'Green River, UT':'fuel','Elko':'food','Battle Mountain':'food','Auburn, CA':'food'};
+  var catEmoji={fuel:'⛽',scenic:'📷',food:'🍔'};
 
   [
     [[39.6785,-105.9200],C.redrock,'Eisenhower–Johnson Tunnel','11,158 ft · highest point on the Interstate system'],
     [[39.5289,-106.2203],C.redrock,'Vail Pass','10,662 ft summit · gear down'],
     [[39.5870,-107.1930],C.redrock,'Glenwood Canyon','I-70 viaduct above the Colorado River'],
-    [[38.9955,-110.1596],C.plains,'Green River, UT','Last fuel for 108 miles'],
+    [[38.9955,-110.1596],C.plains,'Green River, UT','Last fuel for 108 miles · Ray’s Tavern burger'],
     [[38.9800,-110.4200],C.redrock,'San Rafael Reef','I-70 slices the red-rock fins'],
-    [[40.7332,-113.5509],C.salt,'Tree of Utah','87-ft sculpture · I-80 MM26'],
-    [[40.7700,-113.8300],C.salt,'Bonneville Salt Flats','Viewing platform over the salt'],
+    [[40.7332,-113.5509],C.salt,'Tree of Utah','87-ft sculpture · I-80 MM26 (view at speed)'],
+    [[40.7700,-113.8300],C.salt,'Bonneville Salt Flats','Rest-area view · drive on salt only if dry'],
     [[40.7388,-114.0408],C.salt,'Wendover','Nevada line · clocks back 1 hr'],
-    [[40.8324,-115.7631],C.salt,'Elko','Basque lunch · Ruby Mountains'],
+    [[40.8324,-115.7631],C.salt,'Elko','Basque dinner at The Star · Ruby Mountains'],
     [[40.6388,-116.9343],C.salt,'Battle Mountain','Owl Club steaks'],
+    [[38.8979,-121.0760],C.pine,'Auburn, CA','First In-N-Out dropping out of the Sierra'],
     [[39.3158,-120.3214],C.pine,'Donner Pass','7,056 ft · Donner Lake below'],
     [[39.3280,-120.1833],C.pine,'Truckee','Historic Sierra rail town'],
     [[37.7349,-121.6500],C.bay,'Altamont Pass','Wind-turbine ridges into the Bay'],
     [[37.5124,-121.8805],C.bay,'Mission Peak','Fremont\u2019s iconic 2,517-ft summit']
-  ].forEach(function(w){ L.marker(w[0],{icon:wpIcon(w[1])}).addTo(map).bindPopup(pop(w[2],w[3])); });
+  ].forEach(function(w){ var ty=wpType[w[2]]||'scenic'; var m=L.marker(w[0],{icon:emojiIcon(catEmoji[ty])}).bindPopup(pop(w[2],w[3],w[0])); tip(m,w[2]); m.addTo(catGroups[ty]); });
 
-  map.fitBounds(L.latLngBounds(all),{padding:[42,42]});
+  // ---- day-leg filter: highlight + zoom one leg, or the whole route ----
+  function setActive(d){
+    [].forEach.call(document.querySelectorAll('#mapfilter button'),function(b){
+      b.classList.toggle('active',+b.getAttribute('data-day')===d);
+    });
+  }
+  function showDay(d){
+    setActive(d);
+    map.closePopup();
+    if(!d){
+      legLayers.forEach(function(l){ l.setStyle({opacity:.95,weight:4.5}); });
+      casing.setStyle({opacity:.9});
+      map.fitBounds(L.latLngBounds(all),{padding:[42,42]});
+      return;
+    }
+    legLayers.forEach(function(l,i){ l.setStyle(i===d-1?{opacity:1,weight:6}:{opacity:.18,weight:3}); });
+    casing.setStyle({opacity:.3});
+    map.fitBounds(L.latLngBounds(segs[d-1]),{padding:[50,50]});
+    var hm=stopMarkers[d];   // Day d's overnight stop — auto-open its popup
+    if(hm && catGroups.hotel.hasLayer(hm)) setTimeout(function(){ hm.openPopup(); }, 460);
+  }
+  [].forEach.call(document.querySelectorAll('#mapfilter button'),function(b){
+    b.addEventListener('click',function(){ showDay(+b.getAttribute('data-day')); });
+  });
+
+  // ---- category chips toggle the marker groups ----
+  [].forEach.call(document.querySelectorAll('#mapcats button'),function(b){
+    b.addEventListener('click',function(){
+      var g=catGroups[b.getAttribute('data-cat')];
+      if(map.hasLayer(g)){ map.removeLayer(g); b.classList.add('off'); }
+      else { map.addLayer(g); b.classList.remove('off'); }
+    });
+  });
+
+  // ---- fullscreen control ----
+  var FsCtrl=L.Control.extend({options:{position:'topleft'},onAdd:function(){
+    var c=L.DomUtil.create('div','leaflet-bar'), a=L.DomUtil.create('a','rt-fs',c);
+    a.href='#'; a.title='Fullscreen map'; a.innerHTML='⛶'; a.setAttribute('role','button');
+    L.DomEvent.on(a,'click',function(e){ L.DomEvent.stop(e);
+      var el=document.getElementById('map');
+      if(!document.fullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+      else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); }
+      setTimeout(function(){ map.invalidateSize(); }, 300);
+    });
+    return c;
+  }});
+  map.addControl(new FsCtrl());
+
+  // ---- clickable legend rows fly to the stop ----
+  [].forEach.call(document.querySelectorAll('.map-legend .ml-row[data-stop]'),function(r){
+    r.addEventListener('click',function(){
+      var m=stopMarkers[+r.getAttribute('data-stop')];
+      if(!m) return;
+      map.flyTo(m.getLatLng(),8,{duration:.8});
+      setTimeout(function(){ m.openPopup(); },820);
+    });
+  });
+
+  // ---- "view this leg on the map" buttons injected into each day card ----
+  var mapSec=document.getElementById('map-sec');
+  [1,2,3,4,5].forEach(function(d){
+    var band=document.querySelector('.day.d'+d+' .dayband');
+    if(!band) return;
+    var btn=document.createElement('button');
+    btn.type='button'; btn.className='viewmap'; btn.textContent='📍 View this leg on the map';
+    btn.addEventListener('click',function(){
+      if(mapSec) mapSec.scrollIntoView({behavior:'smooth',block:'start'});
+      setTimeout(function(){ showDay(d); },480);
+    });
+    band.appendChild(btn);
+  });
+
+  window.RTmap={showDay:showDay};
+  showDay(0);
 })();
 </script>
 <script>
@@ -1080,18 +1601,23 @@
   svg.appendChild(el("path",{d:area,fill:"url(#elevfill)"}));
   svg.appendChild(el("path",{d:line,fill:"none",stroke:"#1b2128","stroke-width":2.5,"stroke-linejoin":"round","stroke-linecap":"round","class":"trace"}));
 
-  // day-boundary verticals + labels
+  // day-boundary verticals + labels (row-stacked + edge-clamped so the right cluster never collides)
   var dayCols={day1:"#c2912f",day2:"#b1542f",day3:"#5f7488",day4:"#2f6b4f",end:"#2b6d8c"};
   var dayNames={day1:"Denver · D1",day2:"Salina · D2",day3:"Winnemucca · D3",day4:"Manteca · D4",end:"Fremont"};
-  pts.forEach(function(p){
-    if(dayCols[p[3]]){
-      var x=X(p[0]);
-      svg.appendChild(el("line",{x1:x,y1:TOP-6,x2:x,y2:BASE,stroke:dayCols[p[3]],"stroke-width":1.4,"stroke-dasharray":"3 4",opacity:.8}));
-      svg.appendChild(el("circle",{cx:x,cy:Y(p[1]),r:4,fill:dayCols[p[3]],stroke:"#f8f9f4","stroke-width":2}));
-      var dl=el("text",{x:x,y:BASE+18,"text-anchor":"middle","class":"daylbl",fill:dayCols[p[3]]});
-      dl.textContent=dayNames[p[3]];
-      svg.appendChild(dl);
-    }
+  var dayRows=[];
+  pts.filter(function(p){return dayCols[p[3]];}).sort(function(a,b){return a[0]-b[0];}).forEach(function(p){
+    var lx=X(p[0]);
+    svg.appendChild(el("line",{x1:lx,y1:TOP-6,x2:lx,y2:BASE,stroke:dayCols[p[3]],"stroke-width":1.4,"stroke-dasharray":"3 4",opacity:.8}));
+    svg.appendChild(el("circle",{cx:lx,cy:Y(p[1]),r:4,fill:dayCols[p[3]],stroke:"#f8f9f4","stroke-width":2}));
+    var t=dayNames[p[3]], hw=t.length*3.1, tx=lx;
+    if(tx-hw<L) tx=L+hw;
+    if(tx+hw>R) tx=R-hw;
+    var left=tx-hw, right=tx+hw, row=0;
+    while(dayRows[row] && !dayRows[row].every(function(b){return left>b.right+8||right<b.left-8;})) row++;
+    (dayRows[row]=dayRows[row]||[]).push({left:left,right:right});
+    var dl=el("text",{x:tx,y:BASE+18+row*15,"text-anchor":"middle","class":"daylbl",fill:dayCols[p[3]]});
+    dl.textContent=t;
+    svg.appendChild(dl);
   });
 
   // peaks
@@ -1105,17 +1631,58 @@
     }
   });
 
-  // a few town labels along the baseline-ish
-  pts.forEach(function(p){
-    if(p[3]==="town" || p[2]==="Colby" || p[2]==="Glenwood" || p[2]==="Salt Lake City" || p[2]==="Elko" || p[2]==="Reno" || p[2]==="Sacramento"){
-      if(!p[2]) return;
-      var x=X(p[0]),y=Y(p[1]);
-      svg.appendChild(el("circle",{cx:x,cy:y,r:2.5,fill:"#5f7488"}));
-      var tl=el("text",{x:x,y:y+16,"text-anchor":"middle","class":"townlbl"});
-      tl.textContent=p[2];
-      svg.appendChild(tl);
-    }
+  // town labels — staggered above/below the line so neighbours never overlap
+  var townSet={Colby:1,Glenwood:1,"Salt Lake City":1,Elko:1,Reno:1,Sacramento:1};
+  var belowBand=[], aboveBand=[];
+  function tFit(arr,l,r){ return arr.every(function(b){return l>b.right+5||r<b.left-5;}); }
+  pts.filter(function(p){return p[2] && (p[3]==="town"||townSet[p[2]]);}).sort(function(a,b){return a[0]-b[0];}).forEach(function(p){
+    var x=X(p[0]), y=Y(p[1]);
+    svg.appendChild(el("circle",{cx:x,cy:y,r:2.5,fill:"#5f7488"}));
+    var hw=p[2].length*2.7, left=x-hw, right=x+hw, low=y>BASE-46, band;
+    if(!low && tFit(belowBand,left,right)) band='b';
+    else if(tFit(aboveBand,left,right)) band='a';
+    else if(tFit(belowBand,left,right)) band='b';
+    else return;                                   // too crowded here — skip rather than overlap
+    (band==='b'?belowBand:aboveBand).push({left:left,right:right});
+    var tl=el("text",{x:x,y:band==='b'?y+15:y-10,"text-anchor":"middle","class":"townlbl"});
+    tl.textContent=p[2];
+    svg.appendChild(tl);
   });
+
+  // ---- interactive hover readout ----
+  (function(){
+    var line=el("line",{x1:L,y1:TOP,x2:L,y2:BASE,"class":"ev-line",opacity:0});
+    var dot=el("circle",{cx:L,cy:BASE,r:5,"class":"ev-dot",opacity:0});
+    var rd=el("text",{x:L,y:TOP-16,"class":"ev-rd","text-anchor":"middle",opacity:0});
+    var ov=el("rect",{x:L,y:TOP-10,width:R-L,height:BASE-TOP+20,fill:"transparent",style:"cursor:crosshair"});
+    [line,dot,rd,ov].forEach(function(n){ svg.appendChild(n); });
+    function elevAt(mi){
+      for(var i=0;i<pts.length-1;i++){
+        if(mi>=pts[i][0] && mi<=pts[i+1][0]){
+          var span=(pts[i+1][0]-pts[i][0])||1, t=(mi-pts[i][0])/span;
+          return pts[i][1]+t*(pts[i+1][1]-pts[i][1]);
+        }
+      }
+      return pts[pts.length-1][1];
+    }
+    function show(ev){
+      var r=svg.getBoundingClientRect();
+      var clientX=(ev.touches&&ev.touches[0])?ev.touches[0].clientX:ev.clientX;
+      var cx=(clientX-r.left)/r.width*W;
+      var mi=(cx-L)/(R-L)*2065; if(mi<0)mi=0; if(mi>2065)mi=2065;
+      var ft=elevAt(mi), X1=X(mi), Y1=Y(ft);
+      line.setAttribute("x1",X1); line.setAttribute("x2",X1); line.setAttribute("y2",Y1);
+      dot.setAttribute("cx",X1); dot.setAttribute("cy",Y1);
+      var lx=Math.max(L+50,Math.min(R-50,X1));
+      rd.setAttribute("x",lx); rd.textContent=Math.round(ft).toLocaleString()+" ft  ·  mile "+Math.round(mi);
+      [line,dot,rd].forEach(function(n){ n.setAttribute("opacity",1); });
+    }
+    function hide(){ [line,dot,rd].forEach(function(n){ n.setAttribute("opacity",0); }); }
+    ov.addEventListener("mousemove",show); ov.addEventListener("mouseleave",hide);
+    ov.addEventListener("touchstart",show,{passive:true});
+    ov.addEventListener("touchmove",function(e){ e.preventDefault(); show(e); },{passive:false});
+    ov.addEventListener("touchend",hide);
+  })();
 })();
 
 // scroll-reveal for day blocks
@@ -1194,6 +1761,177 @@
     });
   });
   save(); meter();
+})();
+
+// ---- "today" view: highlight the current trip day ----
+(function(){
+  var depart=Date.UTC(2026,5,14,10,0,0), arrive=Date.UTC(2026,5,18,22,0,0), now=Date.now();
+  if(now<depart || now>=arrive) return;            // only during the drive
+  var d=Math.min(5,Math.max(1,Math.floor((now-depart)/864e5)+1));
+  var card=document.querySelector('.day.d'+d);
+  if(card){
+    card.classList.add('istoday');
+    var h=card.querySelector('.dayband h3');
+    if(h){ var b=document.createElement('span'); b.className='todaybadge'; b.textContent='Today'; h.appendChild(b); }
+  }
+  var banner=document.getElementById('todaybanner'), txt=document.getElementById('todaybanner-text'), btn=document.getElementById('todaybanner-btn');
+  if(banner&&txt){
+    txt.innerHTML='<b>Day '+d+' of 5</b> — today’s leg is highlighted below.';
+    banner.classList.add('show');
+    if(btn) btn.addEventListener('click',function(){
+      if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+      if(window.RTmap) window.RTmap.showDay(d);
+    });
+  }
+})();
+
+// ---- fuel cost calculator ----
+(function(){
+  var price=document.getElementById('fc-price'), mpg=document.getElementById('fc-mpg'), out=document.getElementById('fc-out');
+  if(!price||!mpg||!out) return;
+  var legs=[['Day 1 · Pittsburg → Denver',660],['Day 2 · Denver → Salina',410],['Day 3 · Salina → Winnemucca',550],['Day 4 · Winnemucca → Manteca',415],['Day 5 · Manteca → Fremont',60]];
+  function money(n){return '$'+(Math.round(n*100)/100).toFixed(2);}
+  function render(){
+    var p=parseFloat(price.value)||0, m=parseFloat(mpg.value)||29, total=0, gal=0, html='';
+    legs.forEach(function(l){ var g=l[1]/m, c=g*p; total+=c; gal+=g;
+      html+='<div class="calc-row"><span>'+l[0]+'</span><span class="mi">'+l[1]+' mi</span><span class="amt">'+money(c)+'</span></div>';
+    });
+    out.innerHTML=html+'<div class="calc-total"><span class="lbl">Whole trip · ~'+Math.round(gal)+' gal</span><span class="amt">'+money(total)+'</span></div>';
+  }
+  price.addEventListener('input',render); mpg.addEventListener('input',render); render();
+})();
+
+// ---- spend tracker (saved on device) ----
+(function(){
+  var rows=document.getElementById('tr-rows'), totalEl=document.getElementById('tr-total'), deltaEl=document.getElementById('tr-delta');
+  if(!rows) return;
+  var KEY='roadtrip-spend-v1', store={};
+  try{ store=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ store={}; }
+  var LODGING=334, PLAN_TOTAL=765;
+  var cats=[['gas','Gas',290],['food','Food',110],['nightlife','Nightlife / casino',0],['other','Tolls / parking / other',31]];
+  function money(n){return '$'+Math.round(n);}
+  function recompute(){
+    var spent=LODGING;
+    cats.forEach(function(c){ spent+=parseFloat(store[c[0]])||0; });
+    totalEl.textContent=money(spent);
+    var diff=spent-PLAN_TOTAL;
+    deltaEl.className='delta '+(diff>0?'over':'under');
+    deltaEl.textContent=(diff>0?money(diff)+' over the ~$765 plan':money(-diff)+' under the ~$765 plan')+'  ·  lodging $334 already paid';
+  }
+  var html='<div class="track-row" style="border-bottom:1px solid var(--ink-faint)"><span>Lodging · 4 nights (prepaid)</span><span class="plan">plan $334</span><span class="amt">$334</span></div>';
+  rows.innerHTML=html;
+  cats.forEach(function(c){
+    var row=document.createElement('div'); row.className='track-row';
+    row.innerHTML='<span>'+c[1]+'</span><span class="plan">plan '+(c[2]?'$'+c[2]:'—')+'</span>';
+    var inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.step='1'; inp.inputMode='decimal';
+    inp.placeholder='$0'; if(store[c[0]]!=null) inp.value=store[c[0]];
+    inp.addEventListener('input',function(){ store[c[0]]=inp.value; try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){} recompute(); });
+    row.appendChild(inp); rows.appendChild(row);
+  });
+  recompute();
+})();
+
+// ---- sticky nav scroll-spy ----
+(function(){
+  var links=[].slice.call(document.querySelectorAll('.topnav a'));
+  if(!links.length || !('IntersectionObserver' in window)) return;
+  var map={};
+  links.forEach(function(a){ var id=a.getAttribute('href').slice(1); var el=document.getElementById(id); if(el) map[id]=a; });
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(a){ a.classList.remove('active'); });
+        var a=map[e.target.id]; if(a){ a.classList.add('active'); a.scrollIntoView({inline:'center',block:'nearest'}); }
+      }
+    });
+  },{rootMargin:'-55px 0px -70% 0px',threshold:0});
+  Object.keys(map).forEach(function(id){ io.observe(document.getElementById(id)); });
+})();
+
+// ---- back-to-top button ----
+(function(){
+  var btn=document.createElement('button');
+  btn.className='totop'; btn.type='button'; btn.setAttribute('aria-label','Back to top'); btn.innerHTML='↑';
+  document.body.appendChild(btn);
+  btn.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+  var ticking=false;
+  window.addEventListener('scroll',function(){
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(function(){ btn.classList.toggle('show', window.scrollY>700); ticking=false; });
+  });
+})();
+
+// ---- photo lightbox ----
+(function(){
+  var imgs=[].slice.call(document.querySelectorAll('figure.shot img'));
+  if(!imgs.length) return;
+  var lb=document.createElement('div'); lb.className='lightbox';
+  lb.innerHTML='<button class="lb-close" aria-label="Close">×</button><img alt=""><div class="lb-cap"></div>';
+  document.body.appendChild(lb);
+  var big=lb.querySelector('img'), cap=lb.querySelector('.lb-cap');
+  function close(){ lb.classList.remove('show'); big.removeAttribute('src'); }
+  imgs.forEach(function(im){
+    im.addEventListener('click',function(){
+      if(im.closest('figure').classList.contains('err')) return; // skip failed images
+      big.src=im.currentSrc||im.src;
+      var fc=im.closest('figure').querySelector('figcaption span');
+      cap.textContent=fc?fc.textContent:(im.alt||'');
+      lb.classList.add('show');
+    });
+  });
+  lb.addEventListener('click',function(e){ if(e.target===lb||e.target.classList.contains('lb-close')) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
+
+// ---- floating actions: night mode, share, save-as-PDF ----
+(function(){
+  var fab=document.createElement('div'); fab.className='fab';
+  fab.innerHTML='<button id="fab-theme" title="Night mode" aria-label="Toggle night mode">🌙</button>'+
+                '<button id="fab-share" title="Share" aria-label="Share this guide">🔗</button>';
+  document.body.appendChild(fab);
+  var KEY='roadtrip-theme', root=document.documentElement, tbtn=document.getElementById('fab-theme');
+  function apply(t){ if(t==='dark'){ root.setAttribute('data-theme','dark'); tbtn.textContent='☀️'; } else { root.removeAttribute('data-theme'); tbtn.textContent='🌙'; } }
+  var saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
+  if(!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) saved='dark';
+  apply(saved);
+  tbtn.addEventListener('click',function(){ var now=root.getAttribute('data-theme')==='dark'?'light':'dark'; apply(now); try{localStorage.setItem(KEY,now);}catch(e){} });
+  document.getElementById('fab-share').addEventListener('click',function(){
+    var url=location.href.split('#')[0], data={title:document.title,text:'Our road trip plan — Pittsburg, KS → Fremont, CA',url:url};
+    if(navigator.share){ navigator.share(data).catch(function(){}); }
+    else if(navigator.clipboard){ navigator.clipboard.writeText(url).then(function(){ alert('Link copied to clipboard'); }); }
+    else { prompt('Copy this link:', url); }
+  });
+})();
+
+// ---- "set your cap" jumps to the tracker's nightlife row ----
+(function(){
+  var btn=document.getElementById('set-cap-btn'); if(!btn) return;
+  btn.addEventListener('click',function(){
+    var t=document.getElementById('tracker'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(function(){
+      var nl=document.querySelectorAll('#tr-rows input')[2]; // gas, food, [nightlife], other
+      if(nl){ nl.focus(); nl.style.outline='2px solid var(--sign-green)'; setTimeout(function(){ nl.style.outline=''; },1700); }
+    }, 520);
+  });
+})();
+
+// ---- PWA: register service worker + install prompt ----
+(function(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
+  var bar=document.getElementById('installbar'), btn=document.getElementById('installbtn'), deferred=null;
+  var standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(standalone||!bar) return;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault(); deferred=e; bar.classList.add('show');
+  });
+  if(btn) btn.addEventListener('click',function(){
+    if(deferred){ deferred.prompt(); deferred.userChoice.then(function(){ deferred=null; bar.classList.remove('show'); }); }
+  });
+  // iOS Safari has no beforeinstallprompt — show tap-to-install hint
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){ if(btn) btn.style.display='none'; bar.querySelector('span:nth-child(2)').innerHTML='<b>Going off-grid?</b> Tap Share → "Add to Home Screen" to use this guide with no signal.'; bar.classList.add('show'); }
 })();
 </script>
 </body>

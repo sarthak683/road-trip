@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Road trip app icon">
+  <rect width="512" height="512" rx="96" fill="#15643f"/>
+  <!-- road -->
+  <path d="M196 432 C196 432 188 300 230 256 C272 212 240 140 256 80 L300 80 C284 150 318 214 286 264 C254 314 268 432 268 432 Z" fill="#eef0e9"/>
+  <!-- dashes -->
+  <g fill="#15643f">
+    <rect x="244" y="120" width="16" height="34" rx="6"/>
+    <rect x="240" y="186" width="16" height="34" rx="6"/>
+    <rect x="236" y="260" width="16" height="34" rx="6"/>
+    <rect x="232" y="334" width="16" height="34" rx="6"/>
+  </g>
+  <!-- interstate shield -->
+  <g transform="translate(256,150)">
+    <path d="M0 -78 L70 -60 C70 -60 73 18 0 96 C-73 18 -70 -60 -70 -60 Z" fill="#15366b" stroke="#fff" stroke-width="8"/>
+    <path d="M0 -78 L70 -60 C70 -52 70 -38 67 -26 L-67 -26 C-70 -38 -70 -52 -70 -60 Z" fill="#b0202e"/>
+    <text x="0" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="64" fill="#fff">70</text>
+  </g>
+</svg>

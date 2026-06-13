@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bay Area Day Trips · Fremont base · Road Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2b6d8c">
+<style>
+  :root{--paper:#eef0e9;--paper-card:#f8f9f4;--asphalt:#1b2128;--asphalt-soft:#3a434e;--ink-hair:rgba(27,33,40,.16);
+    --ink-faint:rgba(27,33,40,.12);--bay:#2b6d8c;--sign-green:#15643f;--sign-green-deep:#0d4a2c;
+    --shadow:0 1px 0 rgba(27,33,40,.04),0 8px 30px -18px rgba(27,33,40,.45);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--asphalt);font-family:"Inter",system-ui,sans-serif;font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;background-image:linear-gradient(rgba(27,33,40,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(27,33,40,.025) 1px,transparent 1px);background-size:34px 34px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+  a{color:var(--sign-green-deep);}
+  h1,h2,h3{font-family:"Saira Condensed",sans-serif;font-weight:700;letter-spacing:-.01em;line-height:1.04;margin:0;}
+  .back{display:inline-block;margin:22px 0 0;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.78rem;color:var(--asphalt-soft);text-decoration:none;}
+  .eyebrow{font-family:"Saira Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:.78rem;color:var(--bay);margin:18px 0 8px;}
+  h1{font-size:clamp(2.1rem,5vw,3.4rem);text-transform:uppercase;}
+  .lead{color:var(--asphalt-soft);max-width:62ch;margin:14px 0 6px;}
+  #map{height:520px;width:100%;border-radius:16px;border:1px solid var(--ink-hair);box-shadow:var(--shadow);margin:22px 0 8px;background:#e7e9e2;z-index:0;}
+  .leaflet-container{font-family:"Inter",sans-serif;}
+  .mk{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--bay);color:#fff;
+    font-size:15px;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.4);}
+  .mk.home{background:var(--sign-green);}
+  .pop b{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;font-size:1rem;display:block;}
+  .pop span{display:block;color:var(--asphalt-soft);font-size:.85rem;margin-top:2px;}
+  .pop a{display:inline-block;margin-top:7px;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;color:var(--bay);text-decoration:none;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 40px;}
+  .card{background:var(--paper-card);border:1px solid var(--ink-hair);border-left-width:5px;border-left-color:var(--bay);border-radius:13px;padding:18px 20px;box-shadow:var(--shadow);}
+  .card h3{font-size:1.15rem;text-transform:uppercase;letter-spacing:.02em;}
+  .card .meta{font-family:"Space Mono",monospace;font-size:.78rem;color:var(--asphalt-soft);margin:3px 0 9px;}
+  .card p{margin:0;font-size:.92rem;}
+  .card a.dir{display:inline-block;margin-top:10px;font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;color:var(--bay);text-decoration:none;}
+  footer{padding:10px 0 60px;color:var(--asphalt-soft);font-size:.85rem;}
+  @media (max-width:720px){.cards{grid-template-columns:1fr;}#map{height:380px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to the road trip</a>
+  <div class="eyebrow">Home base · Fremont, CA · Jun 18–28</div>
+  <h1>Bay Area day trips</h1>
+  <p class="lead">Ten days to explore from one of the best-placed launch pads in California. Tap any pin for drive time and one-tap directions. Distances are from your Fremont base.</p>
+  <div id="map" role="img" aria-label="Map of Bay Area day trips from Fremont"></div>
+
+  <div class="cards">
+    <div class="card"><h3>San Francisco</h3><div class="meta">~50 min by BART · skip the car</div><p>Take BART from Warm Springs / South Fremont downtown — no bridge tolls, no parking. Ferry Building, Golden Gate Park, the Mission, the bridge. Go on a clear day; summer fog burns off by midday.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=37.7749,-122.4194">Directions ↗</a></div>
+    <div class="card"><h3>Monterey &amp; Big Sur</h3><div class="meta">Monterey ~1.5 hr · Big Sur beyond</div><p>Monterey Bay Aquarium and Cannery Row, then 17-Mile Drive and CA-1 south into Big Sur — Bixby Bridge, McWay Falls. Check CA-1 is open before going deep.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=36.6002,-121.8947">Directions ↗</a></div>
+    <div class="card"><h3>Yosemite Valley</h3><div class="meta">~3.5–4 hr via CA-120</div><p>Waterfalls still strong in June. A reservation may be required to enter midday in summer — check nps.gov first. Treat it as a full day or an overnight.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=37.7456,-119.5936">Directions ↗</a></div>
+    <div class="card"><h3>Lake Tahoe</h3><div class="meta">~3.5 hr · alpine blue</div><p>Emerald Bay, alpine swims, a full-blue June lake. Long day or an overnight; pairs naturally with a Sierra loop.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=38.9399,-119.9772">Directions ↗</a></div>
+    <div class="card"><h3>Santa Cruz</h3><div class="meta">~50 min over CA-17</div><p>Beach, boardwalk, and redwoods nearby — the easy coastal half-day.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=36.9741,-122.0308">Directions ↗</a></div>
+    <div class="card"><h3>Mission Peak</h3><div class="meta">In Fremont · sunrise hike</div><p>The 2,517-ft landmark over your base. ~3.3 mi up, ~2,150 ft gain, no shade — go at sunrise, bring water. Park at Ohlone College to dodge the Stanford Ave permit scramble.</p><a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=37.5124,-121.8805">Directions ↗</a></div>
+  </div>
+
+  <footer>Based at the Holiday Inn Express Fremont–Milpitas Central · part of the Pittsburg, KS → Fremont, CA road trip. Drive times are estimates — check live conditions before you go.</footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  if(typeof L==="undefined") return;
+  var map=L.map('map',{scrollWheelZoom:false}).setView([37.6,-121.6],8);
+  map.on('click focus',function(){ map.scrollWheelZoom.enable(); });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',{subdomains:'abcd',maxZoom:18,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+  function icon(e,home){return L.divIcon({className:'',html:'<div class="mk'+(home?' home':'')+'">'+e+'</div>',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-16]});}
+  function gm(ll){return '<a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+ll[0]+','+ll[1]+'">Directions ↗</a>';}
+  function pop(t,s,ll){return '<div class="pop"><b>'+t+'</b><span>'+s+'</span>'+gm(ll)+'</div>';}
+  var spots=[
+    [[37.5485,-121.9886],'🏠','Fremont (home base)','Holiday Inn Express · Jun 18–28',true],
+    [[37.7749,-122.4194],'🌉','San Francisco','~50 min by BART',false],
+    [[36.6002,-121.8947],'🌊','Monterey','~1.5 hr · aquarium + Cannery Row',false],
+    [[36.3716,-121.9026],'🏞️','Big Sur (Bixby Bridge)','~2.5–3 hr · CA-1 coast',false],
+    [[37.7456,-119.5936],'🏔️','Yosemite Valley','~3.5–4 hr · CA-120',false],
+    [[38.9399,-119.9772],'🚤','Lake Tahoe','~3.5 hr · alpine lake',false],
+    [[36.9741,-122.0308],'🏖️','Santa Cruz','~50 min · beach + boardwalk',false],
+    [[37.5124,-121.8805],'🥾','Mission Peak','In Fremont · sunrise hike',false]
+  ];
+  var pts=[];
+  spots.forEach(function(s){ L.marker(s[0],{icon:icon(s[1],s[4])}).addTo(map).bindPopup(pop(s[2],s[3],s[0])).bindTooltip(s[2],{direction:'top',offset:[0,-14]}); pts.push(s[0]); });
+  map.fitBounds(L.latLngBounds(pts),{padding:[40,40]});
+})();
+if('serviceWorker' in navigator){ window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
+</body>
+</html>

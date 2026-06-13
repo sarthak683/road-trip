@@ -1,0 +1,14 @@
+{
+  "name": "Pittsburg → Fremont Road Trip",
+  "short_name": "Road Trip",
+  "description": "5-day relocation road trip guide, Pittsburg KS to Fremont CA — works offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef0e9",
+  "theme_color": "#15643f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
