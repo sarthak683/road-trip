@@ -1161,7 +1161,7 @@
           <li><b>A plug fixes tread punctures only.</b> Sidewall or shoulder damage means a tow, full stop. After plugging, stay under 50 mph and head straight to a shop.</li>
           <li><b>A rural UT/NV tow can run $450–$700.</b> Confirm your Progressive roadside covers long-distance towing — and consider <b>AAA Plus (~$100/yr, 100-mile free tows)</b> as cheap backup that matches these gaps.</li>
           <li><b>Tire-shop towns on I-80:</b> Wendover, Elko, Winnemucca, Fernley/Reno. If a tire feels off, fix it <b>in town</b> — never push into a basin.</li>
-          <li><b>Pack also:</b> a pressure gauge, a can of Fix-a-Flat as backup, and a reflective triangle for roadside visibility.</li>
+          <li><b>You're well kitted ✓</b> — 12V inflator, sealant, jumper cables and an emergency cone all packed. Add a tire pressure gauge to check cold PSI each morning.</li>
         </ul>
       </div>
     </div>
@@ -1217,11 +1217,11 @@
       <div class="panel">
         <h4>No-spare plan</h4>
         <ul>
-          <li class="done"><b>Tire repair (plug) kit — packed ✓</b></li>
-          <li>Confirm it can <b>reinflate</b> too — a 12V compressor or CO2 cartridges; a plug seals the hole but won't put air back in</li>
-          <li>Confirm <b>roadside assistance</b>: auto insurance, Discover card benefits, any leftover Kia roadside</li>
+          <li class="done"><b>Tire repair kit — packed ✓</b> plug kit + <b>12V inflator</b> + sealant + jumper cables + emergency cone</li>
+          <li class="done"><b>Reinflate covered ✓</b> the kit's 12V inflator re-airs the tire after a plug — exactly what no-spare needs</li>
+          <li class="done"><b>Sealant on board ✓</b> a second-chance fix for small punctures the plug can't seat</li>
+          <li>Confirm <b>roadside assistance</b>: Progressive towing, Discover card benefits, any leftover Kia roadside</li>
           <li>A sidewall blowout can't be plugged — that's the tow case, and a UT/NV desert tow is long and pricey</li>
-          <li>A can of Fix-a-Flat is cheap backup insurance</li>
         </ul>
       </div>
       <div class="panel">
@@ -1322,12 +1322,12 @@
     <div class="checklist">
       <div class="eyebrow">Before the engine starts</div>
       <ul>
-        <li class="done">Tire repair (plug) kit — packed</li>
-        <li>Confirm roadside assistance (insurance / Discover / Kia)</li>
-        <li>Inspect all 4 tires — tread, sidewalls, pressure</li>
+        <li class="done">Tire kit — plug, 12V inflator, sealant, jumper cables, cone</li>
+        <li>Confirm roadside assistance (Progressive / Discover / Kia)</li>
+        <li class="done">Inspect all 4 tires — tread, sidewalls, pressure</li>
         <li class="done">Download offline maps for the route (incl. the dead zones)</li>
         <li>Top off gas in Green River, UT (Day 2) and Nevada (Day 4)</li>
-        <li>Print or save offline the 4 hotel confirmations</li>
+        <li class="done">Print or save offline the 4 hotel confirmations</li>
         <li class="done">Pack cooler, water, sunglasses, light jacket</li>
         <li class="done">Glovebox: temp tag, insurance, bill of sale, license</li>
         <li class="done">Add the 2nd guest to the Fremont reservation</li>
@@ -1747,7 +1747,7 @@
 
 // ---- interactive, saved checklists + readiness meter ----
 (function(){
-  var KEY="roadtrip-checks-v1", store={};
+  var KEY="roadtrip-checks-v2", store={};
   try{ store=JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ store={}; }
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
   function keyOf(li){ return (li.textContent||"").trim().replace(/\s+/g," ").slice(0,90); }
@@ -1769,8 +1769,7 @@
     [].forEach.call(ul.children,function(li){
       if(li.tagName!=="LI") return;
       var k=keyOf(li);
-      if(k in store) li.classList.toggle("done",!!store[k]);
-      else store[k]=li.classList.contains("done");
+      if(k in store) li.classList.toggle("done",!!store[k]);   // only your explicit taps override the page default
       li.setAttribute("role","button");
       li.setAttribute("tabindex","0");
       li.setAttribute("aria-pressed",li.classList.contains("done")?"true":"false");
@@ -1784,7 +1783,7 @@
       li.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
     });
   });
-  save(); meter();
+  meter();
 })();
 
 // ---- "today" view: highlight the current trip day ----
