@@ -479,6 +479,13 @@
     font-size:.78rem;color:var(--asphalt-soft);text-decoration:none;padding:6px 12px;border-radius:20px;white-space:nowrap;transition:background .15s,color .15s;}
   .topnav a:hover{color:var(--asphalt);background:rgba(27,33,40,.06);}
   .topnav a.active{color:#fff;background:var(--sign-green);}
+  .topnav{display:flex;align-items:center;gap:8px;}
+  .topnav .tn-in{flex:1;min-width:0;}
+  .tn-actions{flex:none;display:flex;gap:6px;}
+  .tn-actions button{width:34px;height:34px;border-radius:50%;cursor:pointer;background:var(--paper-card);color:var(--asphalt);
+    border:1px solid var(--ink-hair);font-size:.98rem;line-height:1;box-shadow:var(--shadow);transition:background .15s,color .15s;}
+  .tn-actions button:hover{background:var(--asphalt);color:#fff;}
+  [data-theme="dark"] .tn-actions button{background:#1e242b;color:#e7ebe6;}
 
   /* ---------- back to top ---------- */
   .totop{position:fixed;right:18px;bottom:18px;z-index:700;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
@@ -552,6 +559,22 @@
     body{background:#fff;}
     #map{height:320px;}
   }
+
+  /* ---------- mobile refinements ---------- */
+  @media (max-width:560px){
+    .wrap{padding:0 16px;}
+    .topnav a{padding:6px 10px;font-size:.74rem;}
+    #map{height:360px;}
+    .map-legend{position:static;width:auto;margin-top:10px;display:flex;flex-wrap:wrap;gap:5px 16px;padding:0;
+      -webkit-backdrop-filter:none;backdrop-filter:none;background:transparent;border:none;box-shadow:none;}
+    .map-legend .ml-title{width:100%;margin-bottom:2px;}
+    .map-legend .ml-row{padding:2px 0;margin:0;}
+    .calc-in label,.calc-in input,.track input{width:100%;}
+    .calc-in{gap:10px;}
+    .route-title{font-size:2.4rem;}
+    .moment{grid-template-columns:34px 1fr;gap:11px;}
+    figure.shot img,figure.shot.wide img{height:200px;}
+  }
 </style>
 </head>
 <body>
@@ -582,6 +605,7 @@
       <a href="#emergency">SOS</a>
       <a href="#bay">Bay</a>
     </div>
+    <div class="tn-actions" id="tn-actions"></div>
   </nav>
 
   <!-- ===================== HERO ===================== -->
@@ -1885,10 +1909,9 @@
 
 // ---- floating actions: night mode, share, save-as-PDF ----
 (function(){
-  var fab=document.createElement('div'); fab.className='fab';
-  fab.innerHTML='<button id="fab-theme" title="Night mode" aria-label="Toggle night mode">🌙</button>'+
-                '<button id="fab-share" title="Share" aria-label="Share this guide">🔗</button>';
-  document.body.appendChild(fab);
+  var host=document.getElementById('tn-actions')||document.body;
+  host.innerHTML='<button id="fab-theme" title="Night mode" aria-label="Toggle night mode">🌙</button>'+
+                 '<button id="fab-share" title="Share" aria-label="Share this guide">🔗</button>';
   var KEY='roadtrip-theme', root=document.documentElement, tbtn=document.getElementById('fab-theme');
   function apply(t){ if(t==='dark'){ root.setAttribute('data-theme','dark'); tbtn.textContent='☀️'; } else { root.removeAttribute('data-theme'); tbtn.textContent='🌙'; } }
   var saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
