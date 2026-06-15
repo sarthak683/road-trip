@@ -574,7 +574,27 @@
     .route-title{font-size:2.4rem;}
     .moment{grid-template-columns:34px 1fr;gap:11px;}
     figure.shot img,figure.shot.wide img{height:200px;}
+    .pg-step .lbl{font-size:.6rem;}
   }
+
+  /* ---------- trip progress tracker ---------- */
+  .progress{margin:26px 0 4px;background:var(--paper-card);border:1px solid var(--ink-hair);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);}
+  .progress .pg-h{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:.9rem;color:var(--sign-green-deep);margin-bottom:14px;}
+  .pg-track{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .pg-step{position:relative;text-align:center;padding-top:36px;}
+  .pg-step .n{position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:.95rem;
+    background:var(--paper);color:var(--asphalt-soft);border:2px solid var(--ink-hair);z-index:1;}
+  .pg-step::before{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--ink-hair);z-index:0;}
+  .pg-step:first-child::before{display:none;}
+  .pg-step .lbl{font-size:.72rem;color:var(--asphalt-soft);line-height:1.25;display:block;}
+  .pg-step.done .n{background:var(--sign-green);color:#fff;border-color:var(--sign-green);}
+  .pg-step.done::before,.pg-step.next::before{background:var(--sign-green);}
+  .pg-step.next .n{border-color:var(--sign-green);color:var(--sign-green-deep);box-shadow:0 0 0 4px rgba(21,100,63,.16);}
+  .pg-step.next .lbl{color:var(--asphalt);font-weight:600;}
+  .day.complete .daycard{opacity:.82;}
+  .donebadge{display:inline-block;font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.08em;
+    font-size:.66rem;background:#7fd1a3;color:var(--sign-green-deep);border-radius:20px;padding:3px 11px;margin-top:10px;margin-left:8px;}
 </style>
 </head>
 <body>
@@ -641,6 +661,17 @@
       </div>
     </div>
   </header>
+
+  <div class="progress" id="progress">
+    <div class="pg-h">Trip progress · Day 1 done — Day 2 tomorrow 🏔️</div>
+    <div class="pg-track">
+      <div class="pg-step done"><span class="n">✓</span><span class="lbl">Denver<br>done</span></div>
+      <div class="pg-step next"><span class="n">2</span><span class="lbl">Salina<br>tomorrow</span></div>
+      <div class="pg-step"><span class="n">3</span><span class="lbl">Winnemucca</span></div>
+      <div class="pg-step"><span class="n">4</span><span class="lbl">Manteca</span></div>
+      <div class="pg-step"><span class="n">5</span><span class="lbl">Fremont</span></div>
+    </div>
+  </div>
 
   <div class="bigidea">
     <div class="eyebrow">The big idea</div>
@@ -785,14 +816,14 @@
     <div class="road">
 
       <!-- DAY 1 -->
-      <article class="day d1">
+      <article class="day d1 complete">
         <div class="pin">1</div>
         <div class="daycard">
           <div class="dayband">
             <div class="date">SUNDAY · JUNE 14</div>
             <h3>Pittsburg, KS → Denver area</h3>
             <div class="stat2">~660 mi · ~9.5 hr · the long transit day</div>
-            <span class="tag">Plains · longest leg</span>
+            <span class="tag">Plains · longest leg</span><span class="donebadge">✓ Done</span>
           </div>
           <div class="daybody">
             <p>Flat, fast, and easy — but it's the longest leg, so split the wheel and leave early. You gain an hour into Colorado, so you reach Denver with the afternoon still ahead.</p>
